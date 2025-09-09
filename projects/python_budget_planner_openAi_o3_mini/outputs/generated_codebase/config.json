@@ -1,0 +1,18 @@
+{
+  "database": {
+    "uri": "sqlite:///budget_planner.db"
+  },
+  "server": {
+    "port": 5000,
+    "environment": "development"
+  },
+  "charts": {
+    "defaultType": "bar",
+    "supportedTypes": ["bar", "pie"]
+  },
+  "reports": {
+    "monthly": true,
+    "yearly": true,
+    "exportFormats": ["pdf", "csv"]
+  }
+}

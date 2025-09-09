@@ -1,0 +1,32 @@
+{
+  "bodies": [
+    {
+      "id": "sun",
+      "mass": 1.989e30,
+      "position": [0.0, 0.0],
+      "velocity": [0.0, 0.0],
+      "color": "#FFD700",
+      "radius": 30
+    },
+    {
+      "id": "earth",
+      "mass": 5.972e24,
+      "position": [1.496e11, 0.0],
+      "velocity": [0.0, 29780.0],
+      "color": "#1E90FF",
+      "radius": 10
+    },
+    {
+      "id": "mars",
+      "mass": 6.39e23,
+      "position": [2.279e11, 0.0],
+      "velocity": [0.0, 24070.0],
+      "color": "#FF4500",
+      "radius": 8
+    }
+  ],
+  "time_step": 3600,
+  "gravitational_constant": 6.67430e-11,
+  "integration_method": "verlet",
+  "window_size": [1280, 720]
+}
