@@ -10,7 +10,7 @@ app.register_blueprint(viz, url_prefix='/api')
 
 # Global error handler
 @app.errorhandler(Exception)
-def handle_exception(e):
+ def handle_exception(e):
     # Here you can add logging e.g. to a file
     return jsonify({'error': str(e)}), 500
 
