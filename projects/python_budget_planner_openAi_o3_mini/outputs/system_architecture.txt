@@ -1,0 +1,153 @@
+Below is a high-level system architecture that translates the specifications into a modular design along with recommended technology choices. This design separates concerns so that changes in one area (for example, the visualization components) do not require massive changes in other areas (like the business logic or persistence layer).
+
+─────────────────────────────  
+1. Architectural Overview  
+─────────────────────────────
+
+The application is divided into four primary layers:
+
+A. Presentation Layer (Frontend)  
+ • Offers a responsive, accessible web interface that runs on desktop and mobile.  
+ • Implements features for transaction management, category management, report viewing, data export, and interactive visualizations.  
+ • Consumes RESTful API endpoints exposed by the backend.
+
+B. Business Logic & API Layer (Backend)  
+ • Implements all core application logic including transaction processing, validations, aggregation (monthly/yearly summaries), and chart data preparations.  
+ • Exposes RESTful endpoints for CRUD operations on transactions and categories as well as endpoints to serve report and visualization data.
+
+C. Data Access & Persistence Layer  
+ • Handles storage and retrieval of application data.  
+ • Interacts with an SQLite database (with the potential for migration to more robust DBMS such as PostgreSQL if scaling demands) through an ORM or raw SQL queries.  
+ • Uses indexes and optimized queries to maintain performance.
+
+D. Visualization & Reporting Module  
+ • Implements data transformations and aggregations using Pandas.  
+ • Generates visualizations using Matplotlib for static image generation or uses client-side libraries (e.g., Chart.js) for interactive charts if interactivity is prioritized.  
+ • Provides support for export formats like PDF and CSV through report generation services.
+
+─────────────────────────────  
+2. Component Design & Data Flow  
+─────────────────────────────
+
+A. Presentation Layer (Frontend)
+ 1. Technology Stack:  
+  – Framework: React (or Vue.js) for a modern, component-based architecture.  
+  – Package Management: Node.js with package.json for managing dependencies and build tools (Webpack, Babel).  
+ 2. Responsibilities:  
+  – Render user interfaces for transaction input, category management, and report viewing.  
+  – Handle client-side validations and user interactions (e.g., confirmation dialogs on deletion).  
+  – Consume REST API endpoints provided by the backend for all data operations.
+
+B. Business Logic & API Layer (Backend)
+ 1. Technology Stack:  
+  – Language: Python 3.8+  
+  – Web Framework: Flask (or a lighter alternative such as FastAPI for asynchronous support or Django for built-in admin features)  
+  – API: RESTful endpoints for all CRUD and data retrieval operations.
+  – Dependency Management: pip with a requirements.txt or Poetry for reproducible builds.  
+ 2. Key Components:  
+  – Controllers/Views: Endpoints for transaction creation, editing, deletion, and category management.  
+  – Service Layer: Encapsulates business rules such as validating input data (date, numeric values), enforcing Income/Expense flags, generating summaries, and handling reassignments during category deletion.
+  – Configuration Loader: Reads configuration details (from config.json) for database credentials, server port, chart defaults, and other environment-specific settings.
+  – Error and Logging Middleware: Captures exceptions, logs performance data, and maintains audit trails.
+
+C. Data Access & Persistence Layer
+ 1. Technology Stack:  
+  – Database: SQLite3 (with a modular design to allow migration to PostgreSQL or another DBMS if needed)  
+  – ORM / Data Access Library: Use SQLAlchemy for ORM capabilities or rely on raw SQL when performance tuning is needed.
+ 2. Structure:  
+  – Entities: Tables for transactions, categories (predefined and custom), audit logs (if enabled).  
+  – Indexing: Create indexes on key fields like date and category to improve query performance for summary reports.
+  – Backup/Recovery: Scripts or routines that backup data and allow recovery when needed.
+
+D. Visualization & Reporting Module
+ 1. Functionality:  
+  – Data Transformation: Use Pandas to preprocess and aggregate data per month and per year.  
+  – Chart Generation: 
+   • For static reports, generate bar or pie charts using Matplotlib and serve them as images.  
+   • For enhanced interactivity, expose endpoints which return JSON data formatted for client-side libraries like Chart.js.
+  – Report Export: Optionally generate and serve PDF or CSV formats based on user selections.
+ 2. Integration:  
+  – This module interacts with the Business Logic layer to obtain raw data, processes it (e.g., summarization, trend analysis), and then either returns images or chart data structures to the client.
+
+─────────────────────────────  
+3. Technology Stack Summary  
+─────────────────────────────
+
+1. Frontend:  
+ • Framework: React (or Vue.js)  
+ • Language: JavaScript/TypeScript  
+ • Package Manager & Build Tools: Node.js (npm/yarn), package.json  
+ • Libraries: Chart.js (optional for interactive charts), CSS frameworks (Bootstrap, Material-UI) for responsive design.
+
+2. Backend/API:  
+ • Language: Python 3.8+  
+ • Framework: Flask (or FastAPI/Django)  
+ • Libraries:  
+  – Pandas for data analysis  
+  – Matplotlib for chart generation  
+  – SQLAlchemy / sqlite3 for database interaction  
+  – Additional libraries for security (e.g., Flask-Talisman for HTTPS enforcement) and logging.
+
+3. Database:  
+ • SQLite3 as the initial datastore with design considerations for migration to PostgreSQL if volume increases.
+
+4. Development/CI Tools:  
+ • Version Control: Git (hosted on GitHub, GitLab, etc.)  
+ • CI/CD: Tools such as GitHub Actions, Jenkins, or GitLab CI integrated with both frontend and backend testing pipelines.  
+ • Dependency Management: requirements.txt or Poetry for Python; package.json for Node.js dependencies.
+
+5. Deployment and Configuration:  
+ • Configuration File: config.json (to include database credentials, server port, chart defaults, and report settings)  
+ • Web Server: WSGI/ASGI-compatible server (e.g., Gunicorn for Flask/FastAPI or uWSGI for Django) behind a reverse proxy (like Nginx) for production deployments  
+ • Security: HTTPS enforced at the web server/reverse proxy level, with encryption at rest for sensitive data.
+
+─────────────────────────────  
+4. Data Flow Diagram (High-Level)
+─────────────────────────────
+
+ [User Browser]  
+    │  
+   HTTP/HTTPS Requests (CRUD, Report, Visualization data)  
+   │  
+ [Frontend (React App)]  
+    │  
+   RESTful API Calls  
+   │  
+ [Backend (Python Flask/FastAPI App)]  
+   ├── [Business Logic & Validation]  
+   │   │  
+   ├── [Data Access Layer (SQLAlchemy/SQLite Query)]  
+   │   │  
+   └── [Visualization & Reporting Module (Pandas/Matplotlib)]  
+       │  
+   Database Interactions (Read/Write)  
+       │  
+   [SQLite Database]  
+       │  
+     Response Data (e.g., JSON, chart images/data)  
+       │  
+ [Frontend renders data and charts]
+
+─────────────────────────────  
+5. Error Handling, Logging, and Future Scalability
+─────────────────────────────
+
+• Error Handling & Logging:  
+ – Both client-side and server-side validation with clear, user-friendly error messages.  
+ – Logging configured at multiple levels (info, error, performance metrics) with optional audit log for transaction changes.
+
+• Scalability Considerations:  
+ – Initially use SQLite3; design the Data Access Layer to be agnostic enough to support PostgreSQL when required.  
+ – Modular design ensures that additional features (e.g., multi-currency support, recurring transactions) can be added with minimal disruption.
+
+• CI/CD & Testing:  
+ – Automated unit tests for each module and integration tests for API endpoints.  
+ – Stress/performance testing included in the CI pipeline to monitor critical operations such as summary report generation and data transformations.
+
+─────────────────────────────  
+6. Conclusion
+─────────────────────────────
+
+This high-level design meets the functional requirements (transaction management, categorization, reporting, visualization) while addressing the nonfunctional requirements (usability, performance, security, and scalability). By dividing the application into distinct modules (frontend, backend API, data access, and visualization/reporting), the system is both maintainable and adaptable for future expansions.
+
+The recommended technology stack leverages Python’s robust data processing libraries alongside modern JavaScript frameworks for a clean separation of concerns, ensuring a responsive, secure, and scalable Personal Budget Planner application.

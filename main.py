@@ -18,11 +18,17 @@ def save_output(filepath, content):
             f.write(str(content))
 
 def main():
+    # Define project structure
+    project_name = 'python_budget_planner_openAi_o3_mini'
+    base_dir = os.path.join('projects', project_name)
+    inputs_dir = os.path.join(base_dir, 'inputs')
+    outputs_dir = os.path.join(base_dir, 'outputs')
+
     # Initialize components
     llm_reasoner = LLMReasoner()
     # Initialize GitHub manager with a personal access token and repository name
     # These are from the newly created GitHub repository that will be used to store the generated code
-    github_manager = GitHubManager(os.getenv('GITHUB_TOKEN'), 'python_budget_planner_openAi_o3_mini')
+    github_manager = GitHubManager(os.getenv('GITHUB_TOKEN'), 'LLM_Software_Company')
 
     # Agent Pipeline
     goal_agent = GoalAnalysisAgent(llm_reasoner, github_manager)
