@@ -1,1 +1,3 @@
-Code a simple a lightweight news reader that fetches and displays top headlines from a public API.The result should be a functional application with, so if necessary, create required config files.Features: Basic UI: List of news headlines on the home screen Tappable item to view full article details.
+Code a simple a lightweight news reader that fetches and displays top headlines from a public API.
+The result should be a functional application with, so if necessary, create required config files.
+Features: Basic UI: List of news headlines on the home screen Tappable item to view full article details.

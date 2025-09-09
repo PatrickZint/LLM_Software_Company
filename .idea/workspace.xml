@@ -6,12 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="b3e9d9ef-b601-49c9-aba3-7ff958a4f7c6" name="Changes" comment="New code_gen_agent.py">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/architecture_design_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/architecture_design_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/code_gen_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/code_gen_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/environment_analysis_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/environment_analysis_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/goal_analysis_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/goal_analysis_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/spec_gen_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/spec_gen_agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/projects/python_News_App_openAi_o3_mini_secure/inputs/goals.txt" beforeDir="false" afterPath="$PROJECT_DIR$/projects/python_News_App_openAi_o3_mini_secure/inputs/goals.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -134,7 +130,7 @@
       <workItem from="1754903238375" duration="1417000" />
       <workItem from="1755079803111" duration="1247000" />
       <workItem from="1756281723672" duration="3298000" />
-      <workItem from="1757417097146" duration="4864000" />
+      <workItem from="1757417097146" duration="5517000" />
     </task>
     <task id="LOCAL-00001" summary="New code_gen_agent.py">
       <option name="closed" value="true" />

@@ -30,14 +30,16 @@ def main():
     inputs_dir = os.path.join(base_dir, 'inputs')
     outputs_dir = os.path.join(base_dir, 'outputs')
 
+    """
     # Create directories if they don't exist
     goals_path = os.path.join(inputs_dir, 'goals.txt')
     env_path = os.path.join(inputs_dir, 'environment.txt')
-    create_input_file(goals_path, "Code a simple a lightweight news reader that fetches and displays top headlines from a public API."
-                                  "The result should be a functional application with, so if necessary, create required config files."
-                                  "Features: Basic UI: List of news headlines on the home screen Tappable item to view full article details.")
+    create_input_file(goals_path, f"Code a simple a lightweight news reader that fetches and displays top headlines from a public API. \n"
+                                  f"The result should be a functional application with, so if necessary, create required config files. \n"
+                                  f"Features: Basic UI: List of news headlines on the home screen Tappable item to view full article details. \n")
     create_input_file(env_path, "The system must be secure and provide a reasonable performance. "
                                 "Technology stack: Use Python and Tkinter.")
+    """
 
     # Initialize components
     llm_reasoner = LLMReasoner()
@@ -47,11 +49,13 @@ def main():
 
     # Agent Pipeline
     goal_agent = GoalAnalysisAgent(llm_reasoner, github_manager)
+    goals_path = os.path.join(inputs_dir, 'goals.txt')
     refined_goals = goal_agent.process_goals(goals_path)
     #print("Refined Goals:", refined_goals)
     save_output(os.path.join(outputs_dir, 'refined_goals.txt'), refined_goals)
 
     env_agent = EnvironmentAnalysisAgent(llm_reasoner, github_manager)
+    env_path = os.path.join(inputs_dir, 'environment.txt')
     env_profile = env_agent.analyze_environment(env_path)
     #print("Environment Profile:", env_profile)
     save_output(os.path.join(outputs_dir, 'refined_environment.txt'), env_profile)
