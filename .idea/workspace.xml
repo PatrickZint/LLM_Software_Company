@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b3e9d9ef-b601-49c9-aba3-7ff958a4f7c6" name="Changes" comment="New code_gen_agent.py">
-      <change afterPath="$PROJECT_DIR$/projects/work_list.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/projects/python_budget_planner_openAi_o3_mini/outputs/generated_codebase/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/projects/python_budget_planner_openAi_o3_mini/outputs/generated_codebase/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/projects/python_budget_planner_openAi_o3_mini/outputs/generated_codebase/unexpected indent.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,7 +129,7 @@
       <workItem from="1754903238375" duration="1417000" />
       <workItem from="1755079803111" duration="1247000" />
       <workItem from="1756281723672" duration="3298000" />
-      <workItem from="1757417097146" duration="6568000" />
+      <workItem from="1757417097146" duration="7334000" />
     </task>
     <task id="LOCAL-00001" summary="New code_gen_agent.py">
       <option name="closed" value="true" />
@@ -165,6 +163,6 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/MultiLLM_Patrick$code_gen_agent.coverage" NAME="code_gen_agent Coverage Results" MODIFIED="1753870077794" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/agents" />
     <SUITE FILE_PATH="coverage/MultiLLM_Patrick$LLMReasoner.coverage" NAME="LLMReasoner Coverage Results" MODIFIED="1753870066090" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/MultiLLM_Patrick$main.coverage" NAME="main Coverage Results" MODIFIED="1757433521619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/MultiLLM_Patrick$main.coverage" NAME="main Coverage Results" MODIFIED="1757434762819" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

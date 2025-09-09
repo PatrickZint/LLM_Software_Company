@@ -1,0 +1,179 @@
+Below is a comprehensive system specification document that addresses the refined goals along with the environmental profile. This document is organized into three large sections: Functional Requirements, Non‐Functional Requirements, and System Design Recommendations.
+
+──────────────────────────────
+1. Functional Requirements
+──────────────────────────────
+
+A. Input Processing  
+ 1. Image Input Acceptance  
+  • The application shall accept two image file inputs provided by the user.  
+  • Supported image formats include, but are not limited to, PNG and JPEG.  
+  • The set of supported formats shall be configurable via an external configuration file.  
+
+ 2. Input Validation & Preprocessing  
+  • Validate that the two input images are valid image files and can be parsed by the libraries (Pillow/OpenCV).  
+  • Check that both images have identical dimensions.  
+   – If dimensions differ, the system will either raise a descriptive error or, if enabled via configuration, scale/adapt the images to common dimensions.  
+  • Validate input file paths exist and provide appropriate error messaging if not.
+
+B. Image Comparison and Highlighting  
+ 1. Pixel-Level Comparison  
+  • The application shall perform a pixel-by-pixel comparison between the two images.  
+  • The comparison logic shall leverage OpenCV for advanced processing and Pillow for any necessary image format handling or conversion.
+
+ 2. Difference Highlighting  
+  • Detected differences must be highlighted by overlaying visual markers (e.g., colored bounding boxes, markers, or overlays).  
+  • The style (color, transparency, marker type) of the highlights is configurable via the settings file.  
+
+ 3. Tolerance and Threshold  
+  • An adjustable tolerance threshold shall be provided to ignore minor differences (e.g., due to noise or anti-aliasing).  
+  • The threshold value should be configurable and can be adjusted via a configuration parameter to suit different use cases.
+
+ 4. Diff Image Generation  
+  • A final “diff image” shall be generated which presents the baseline/screenshot context along with visual markers indicating the differences.  
+  • The output image must preserve the baseline context while clearly showing all points of deviation.
+
+C. Data Storage  
+ 1. Database Usage  
+  • The application will use SQLite3 as the persistence backend for storing diff results.  
+  • All database connection parameters (type, host if remote, port, user, password, schema/database name) will be maintained in an external configuration file.
+
+ 2. Metadata and Diff Logs  
+  • The application shall store the following data in a structured schema:
+   – Input image metadata: file names, timestamps, image dimensions.
+   – Processing parameters: tolerance thresholds, algorithm settings.
+   – Detected differences: coordinates (e.g., x, y positions) and the degree or type of difference.
+   – File paths/references to the generated diff image(s).
+  • The database schema should be defined in migration/initialization scripts to allow for easy setup and modifications.
+
+D. Exporting Diff Images  
+ 1. Diff Image Output  
+  • The tool shall export the generated diff images to a user-specified directory.  
+  • The target export directory is either passed as a command-line argument or specified via the configuration file.  
+
+ 2. Directory Handling  
+  • Before saving, the application shall check if the target directory exists.
+   – If it does not exist, the application may create it automatically (if allowed by configuration).
+  • Validate that the application process has write permissions to the directory and produce appropriate warnings or errors if permissions are insufficient.
+
+E. Configuration Files  
+ 1. External Configuration Usage  
+  • The application shall use an external configuration file (preferably in industry-standard formats such as YAML, JSON, or INI) to load settings.  
+  • Configurable parameters include:
+   – Database connection details.
+   – Image format options.
+   – Tolerance and comparison thresholds.
+   – Export directory paths.
+   – Logging levels and output details.
+   – UI settings (if applicable, such as CLI prompt behavior or GUI options).
+
+──────────────────────────────
+2. Non-Functional Requirements
+──────────────────────────────
+
+A. Performance  
+ • The application must efficiently handle high-resolution screenshots.
+ • Implement multi-threading or asynchronous processing where applicable (for file I/O or image processing tasks) to optimize performance.
+ • Optimizations in the pixel-by-pixel comparison algorithm should be considered to ensure minimal latency even with large images.
+
+B. Usability  
+ • Interface Options:
+  – Provide a simple Command Line Interface (CLI) with clear instructions for inputs, configuration options, and error handling.
+  – Optionally, a lightweight GUI could be developed for users less comfortable with CLI inputs.
+ • Error Messaging:
+  – Error messages must be clear and descriptive (e.g., invalid file path, unsupported file format, image dimension mismatch, database connection errors).
+  – Provide troubleshooting tips or minimum configuration requirements as part of error responses.
+
+C. Maintainability  
+ • Code Modularity:
+  – The codebase should follow a modular design – separate modules for input processing, image comparison, data persistence, and export functionality.
+  – Abstract image processing routines so they can be replaced or extended (e.g., to integrate future region matching features).
+ • Documentation:
+  – Both user documentation and developer documentation (via code comments, README files, and configuration guidelines) should be provided.
+  – Maintain API documentation and architectural diagrams where necessary for future developers.
+ • Testing:
+  – Unit tests must cover critical components such as image I/O, pixel comparison logic, and database interactions.
+
+D. Reliability and Logging  
+ • Logging:
+  – Implement a logging framework that can log at multiple levels (DEBUG, INFO, WARNING, ERROR) and direct logs to configurable output destinations (console, file, etc.).
+  – Log all key operations, including file processing, image comparison steps, data storage operations, and error conditions.
+ • Exception Handling:
+  – Ensure that exceptions are caught gracefully and that any errors (especially during database operations) trigger appropriate rollbacks or error notifications.
+  – Critical failures must be reported immediately to the user with suggestions for corrective action.
+ • Robustness:
+  – The system should be designed to handle unexpected input or operational errors gracefully, without causing system crashes.
+
+──────────────────────────────
+3. System Design Recommendations
+──────────────────────────────
+
+A. Architectural Style  
+ • Adopt a layered architecture:
+  1. Presentation Layer: Provides either a CLI or GUI front end for user inputs and interaction.  
+  2. Application/Service Layer: Contains the business logic for image processing, diff generation, and configuration management.  
+  3. Data/Storage Layer: Abstracts interactions with the SQLite3 database, ensuring that changes in the persistence mechanism can be made with minimal code impact.
+ • Decouple the image processing engine (which uses Pillow and OpenCV) from the business logic so that any future changes (such as advanced algorithms like region matching) can be added without major refactoring.
+
+B. Module Design and Components  
+ 1. Input Handler Module  
+  – Responsible for loading images from disk.
+  – Validates file integrity, dimensions, and formats.  
+  – Reads user-provided or default configuration for supported formats.
+ 2. Image Processor Module  
+  – Uses Pillow to handle basic image I/O and format conversion.
+  – Uses OpenCV for advanced pixel comparisons, tolerance threshold adjustments, and generating the diff image.
+  – Provides interfaces to configure tolerance parameters and highlight styles.
+ 3. Configuration Manager Module  
+  – Loads and parses configuration files (YAML/JSON/INI).
+  – Exposes an API to all components for accessing runtime parameters.
+  – Allows runtime overrides via command-line arguments.
+ 4. Data Persistence Module  
+  – Abstracts database connectivity and schema management for SQLite3.
+  – Provides CRUD operations for storing metadata, diff logs, and paths to generated images.
+  – Includes error handling and transaction rollback capabilities.
+ 5. Export/Output Module  
+  – Manages the generation of the diff image file.
+  – Validates and manages the target output directory.
+  – Logs file export actions and errors.
+ 6. Logging and Exception Handling Module  
+  – Centralized logging configuration.
+  – Exception handling routines that capture and log issues in every module.
+
+C. Integration and Dependency Management  
+ • Environment and Dependency Setup  
+  – Use Python 3.8+ as a minimum version to ensure compatibility with modern libraries.
+  – Utilize a virtual environment tool (venv, pipenv, or Conda) to isolate dependencies.  
+  – Maintain a requirements.txt (or Pipfile) that specifies:
+   – Pillow, version 9.x or later.
+   – opencv-python, version 4.x or later.
+   – (SQLite3 is built into Python; if additional SQL features are required, document the dependency.)
+ • Testing Strategy  
+  – Implement unit tests for each module, especially for critical processes such as:
+   – Image input validation.
+   – Pixel-comparison and diff generation.
+   – Database interactions and data logging.
+  – Use integration tests to verify file system and database operations, simulating both expected and erroneous usage patterns.
+
+D. Scalability and Future-proofing  
+ • Extension Points  
+  – Abstract the image comparison and diff generation logic to allow incorporation of advanced features (e.g., region matching) in the future.  
+  – Modularize the database access layer so that switching to PostgreSQL or another RDBMS can be done with minimal code changes.
+ • Deployment Considerations  
+  – Package the application as a standalone deployable bundle that includes configuration files, necessary libraries, and documentation.
+  – Provide scripts for initial database schema setup.
+  – Include instructions and automated routines in README or release notes for restoring a virtual environment and installing dependencies.
+
+──────────────────────────────
+Summary
+──────────────────────────────
+
+• The application is a Python 3.8+ standalone tool that:
+ – Reads two image files (PNG, JPEG, etc.) and validates their compatibility.
+ – Compares the images on a pixel level using OpenCV (with Pillow for basic I/O operations) to generate an annotated diff image.
+ – Offers configurable options for tolerance thresholds, output styles, and supported formats via an external config file.
+ – Persists metadata and detailed diff logs in an SQLite3 database.
+ – Exports annotated diff images to a specified directory with checks for existence and write permissions.
+ – Provides clear logging, robust error handling, a modular code structure, and extensive documentation for maintainability and future enhancements.
+
+This specification should serve as a solid foundation for both the design and implementation of the application, ensuring it meets both functional and non-functional requirements and can evolve with future needs.

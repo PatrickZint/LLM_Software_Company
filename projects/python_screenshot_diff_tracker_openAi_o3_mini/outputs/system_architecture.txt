@@ -1,0 +1,159 @@
+Below is a high-level system architecture design that meets the provided specifications. This design separates concerns into distinct layers and modules, defines clear interfaces between components, and selects an appropriate technology stack based on Python’s ecosystem.
+
+──────────────────────────────
+1. High-Level Architectural Overview
+──────────────────────────────
+
+The architecture is designed as a layered system with clear separation of concerns:
+
+• Presentation Layer  
+ – Provides the user interface (primarily a Command Line Interface, with an optional lightweight GUI) for input, configuration, and output display.  
+ – Uses Python’s argparse for CLI and optionally Tkinter or PyQt for a GUI.
+
+• Application / Service Layer  
+ – Contains the business logic including image processing, configuration management, logging/exception handling, and export functionalities.  
+ – Organized into separate modules (Input Handler, Image Processor, Configuration Manager, Data Persistence, Export Manager, and Logging/Exception Handling) to ensure modularity and ease future enhancements.  
+ – Implements multi-threading or asynchronous processing (using concurrent.futures/threading or AsyncIO where applicable) to optimize file I/O and image processing tasks.
+
+• Data / Storage Layer  
+ – Abstracts interactions with the SQLite3 database using an ORM (optionally using SQLAlchemy for ease-of-use and future-proofing) or via direct SQLite3 module calls.  
+ – Manages database connections, migrations, and error handling.
+
+A simplified diagram is as follows:
+
+ [ Presentation Layer (CLI/GUI) ]
+      │
+   [ Application/Service Layer ]
+      ├─ Input Handler Module
+      ├─ Image Processor Module (using Pillow & OpenCV)
+      ├─ Configuration Manager Module
+      ├─ Data Persistence Module (SQLite3)
+      ├─ Export/Output Module
+      └─ Logging & Exception Handling Module
+      │
+  [ Data/Storage Layer (SQLite3 Database) ]
+
+──────────────────────────────
+2. Component Design and Modules
+──────────────────────────────
+
+A. Input Handler Module  
+ – Responsibilities:
+  • Loads two user-provided image files from disk.
+  • Validates file existence, format (PNG, JPEG, etc.) supported by Pillow/OpenCV, and ensures that image dimensions match (or applies scaling if enabled).
+ – Interface:
+  • Accepts file paths (command-line/configuration parameter).
+  • Returns validated images (as Pillow Image objects or NumPy arrays for OpenCV processing).
+
+B. Image Processor Module  
+ – Responsibilities:
+  • Uses Pillow for basic image I/O and conversions.
+  • Uses OpenCV for pixel-by-pixel comparisons.
+  • Applies a configurable tolerance threshold to ignore minor differences.
+  • Generates a diff image with configurable visual highlighting (styling provided via configuration).
+ – Interface:
+  • Provides functions like process_images(image1, image2, settings) that return a diff image and detailed metadata (e.g., coordinates of differences).
+
+C. Configuration Manager Module  
+ – Responsibilities:
+  • Loads and parses external configuration files (YAML, JSON, or INI).
+  • Provides a unified API for accessing runtime parameters such as supported image formats, tolerance levels, database connection parameters, export paths, and logging levels.
+  • Allows for runtime overrides via command-line arguments.
+ – Technology:
+  • Python libraries such as PyYAML for YAML, json for JSON or configparser for INI.
+
+D. Data Persistence Module  
+ – Responsibilities:
+  • Manages interactions with the SQLite3 database.
+  • Performs CRUD operations to save image metadata, processing parameters, diff logs (including coordinates of differences), and file references.
+  • Executes migration/initialization scripts to set up the schema.
+ – Interface:
+  • Abstracts database queries so higher layers need not worry about SQL.
+ – Technology:
+  • SQLite3, with an optional ORM like SQLAlchemy if more abstraction is desired.
+
+E. Export / Output Module  
+ – Responsibilities:
+  • Validates target export directory (creates it if allowed and not existing).
+  • Writes the generated diff image to the specified location.
+  • Checks for write permissions and logs any issues.
+ – Interface:
+  • Receives the diff image and export path; returns success/failure status with error messages if applicable.
+
+F. Logging & Exception Handling Module  
+ – Responsibilities:
+  • Implements a centralized logging framework using Python’s built-in logging module.
+  • Supports multiple log levels (DEBUG, INFO, WARNING, ERROR) and routes logs to console and/or file.
+  • Provides uniform exception handling mechanisms across modules that ensure graceful degradation and detailed error reporting.
+ – Interface:
+  • Exposes logging functions that each component can call.
+  • Implements standard exception classes for known error conditions (e.g., InvalidImageError, DatabaseConnectionError).
+
+──────────────────────────────
+3. Technology Stack Selection
+──────────────────────────────
+
+• Programming Language:  
+ – Python 3.8 or higher (ensures compatibility with modern libraries and async/multi-threading).
+
+• Image Processing:  
+ – Pillow (for image file handling and basic I/O).  
+ – OpenCV (opencv-python package) for pixel-level image comparison, processing, and diff generation.
+
+• Configuration Parsing:  
+ – PyYAML (for YAML files), built-in json module (for JSON), or configparser (for INI files) depending on the chosen format.
+
+• Database Interaction:  
+ – SQLite3 (built-in with Python).  
+ – Optionally, SQLAlchemy if an abstraction layer is desired to ease potential future migration to another RDBMS.
+
+• Dependency Management and Virtual Environment:  
+ – venv or pipenv (or Conda) to isolate project dependencies.  
+ – requirements.txt (or Pipfile) to specify versions and ensure reproducibility (e.g., Pillow 9.x+, opencv-python 4.x+).
+
+• CLI/GUI Frameworks:  
+ – argparse for command-line parsing.  
+ – Tkinter (or optionally PyQt) for a basic GUI if required.
+
+• Logging:  
+ – Python’s standard logging library for robust logging capabilities.
+
+• Testing:  
+ – unittest or pytest for unit tests.  
+ – Integration tests can be scripted to simulate file system and database operations.
+
+──────────────────────────────
+4. Integration, Scalability, and Future-Proofing
+──────────────────────────────
+
+• Decoupling:  
+ – The architecture decouples the image-processing engine (Pillow/OpenCV) from the core business logic using well-defined interfaces, allowing future integration of advanced algorithms (e.g., region matching).
+
+• Module Interactions:  
+ – The Presentation layer communicates user commands and parameters to the Application layer.  
+ – The Configuration Manager supplies runtime parameters to each module.  
+ – The Input Handler and Image Processor interact closely for image validation and diff creation, while logging and error handling are triggered across all components.  
+ – The Data Persistence module stores processing metadata, and the Export module handles output file management.
+
+• Future Extensions:  
+ – By modularizing the Data Persistence layer, switching to PostgreSQL or another database will require minimal refactoring.  
+ – The abstraction in the Image Processor allows the introduction of additional comparison techniques or enhancements.
+ – A more advanced GUI can evolve from the CLI using the same underlying services.
+
+• Deployment:  
+ – Package as a standalone tool that bundles configuration files, required libraries, and scripts (e.g., for database schema setup).
+ – Provide detailed READMEs and automated scripts for setting up virtual environments and dependencies.
+
+──────────────────────────────
+Summary
+──────────────────────────────
+
+This high-level system architecture achieves the following:
+
+1. A layered design ensuring a clear separation between user interface, business logic, and data storage.
+2. Modular components (Input Handler, Image Processor, Configuration Manager, Data Persistence, Export Manager, Logging/Exception Handling) that meet the functional and non-functional requirements.
+3. A technology stack leveraging Python 3.8+, Pillow, OpenCV, SQLite3, standard configuration libraries, and logging mechanisms.
+4. Robust error handling, logging, and testing strategies to ensure performance, maintainability, and reliability.
+5. Future-proofing via decoupling and abstraction of key functionality so that enhancements (e.g., advanced image comparison, database migration) are achievable with minimal disruption.
+
+This architecture meets the comprehensive specifications provided and sets the stage for a scalable, maintainable, and robust Python application for image diff processing.
