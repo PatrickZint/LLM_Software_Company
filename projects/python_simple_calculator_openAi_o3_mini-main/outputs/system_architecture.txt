@@ -1,0 +1,120 @@
+Below is a high-level system architecture design for the Simple Calculator software. This design organizes the system into clearly separated layers and modules, ensuring that the functional and non‐functional requirements are met, while providing a solid foundation for future extensibility.
+
+─────────────────────────────  
+1. Architectural Overview
+
+• Layered & Modular Architecture  
+  Presentation Layer – Handles user interaction through a Tkinter-based GUI.  
+  Business Logic Layer – Contains the core calculation functions (addition, subtraction, multiplication, division), input validation, and error handling.  
+  Exception Handling Module – Isolates error detection and reporting to produce user-friendly error messages.  
+  Testing Module – Encompasses unit and integration tests to validate each component and their interactions.
+
+• Clearly defined interfaces between modules ensure that changes to one module (for example, extending arithmetic functions or enhancing the GUI) can be done with minimal impact on others.
+
+─────────────────────────────  
+2. Component Design
+
+A. GUI Module (Presentation Layer)  
+  Responsibilities:  
+  ▪ Render the user interface using Tkinter.  
+  ▪ Display two input fields, controls (buttons) for arithmetic operations, and a designated output/error display area.  
+  ▪ Subscribe to user events (e.g., button clicks, field updates).  
+  ▪ Clear input fields and messages appropriately for repeated use.  
+  Interaction:  
+  ▪ Upon receiving events, the GUI module calls methods from the Calculator Module to perform the requested arithmetic operation.  
+  ▪ Receives calculation results or error messages and updates the display accordingly.  
+
+B. Calculator Module (Business Logic Layer)  
+  Responsibilities:  
+  ▪ Provide arithmetic operations: addition, subtraction, multiplication, and division.  
+  ▪ Validate inputs, ensuring both provided values are numeric.  
+  ▪ Handle specific conditions such as division by zero by invoking the Exception Handling Module.  
+  Design Considerations:  
+  ▪ Functions are designed to be stateless and independent to support unit testing.  
+  ▪ Extensible design that supports the future integration of additional operations (e.g., exponentiation, factorials).
+
+C. Exception Handling Module  
+  Responsibilities:  
+  ▪ Centralize error handling for both invalid inputs (non-numeric data, blank fields) and runtime exceptions (e.g., division by zero).  
+  ▪ Generate human-readable error messages following the GUI’s requirements (e.g., error messages in red text).  
+  Interaction:  
+  ▪ Called by the Calculator Module when an error condition is detected.  
+  ▪ Returns error strings that the GUI module then displays.
+
+D. Testing Module  
+  Responsibilities:  
+  ▪ Contain unit tests for each arithmetic and validation function using frameworks like unittest or pytest.  
+  ▪ Implement integration tests to simulate end-to-end GUI interactions (e.g., valid and invalid user input paths).  
+  ▪ Performance tests as needed (e.g., using tools such as locust) to verify the responsiveness criteria under extended conditions.  
+  Tools:  
+  ▪ Python testing frameworks (pytest/unittest)  
+  ▪ Continuous Integration (CI) pipelines for automated test runs.
+
+─────────────────────────────  
+3. Technology Stack Selection
+
+• Programming Language:  
+  Python 3.8 or higher  
+  ▪ Leverages modern language features, improved stability, and great community support.
+
+• GUI Framework:  
+  Tkinter (built-in with Python)  
+  ▪ Simple, lightweight, and sufficient for building the required user interface.
+
+• Development Environment & Tooling:  
+  Dependency Management: pipenv or virtualenv  
+  ▪ Ensures an isolated environment for managing dependencies and Python version consistency.  
+  Containerization (Optional): Docker  
+  ▪ Facilitates reproducible build environments and easier cross-platform deployment if needed in the future.  
+  Version Control: Git  
+  ▪ For code management, collaboration, and CI/CD integration.  
+  Linters & Code Formatters:  
+  ▪ Tools such as pylint, flake8, or black to enforce PEP 8 coding standards.
+
+• Testing Frameworks:  
+  unittest or pytest for unit testing and integration testing.  
+  Potential CI integration (e.g., GitHub Actions, Travis CI) to automate testing and code quality checks.
+
+─────────────────────────────  
+4. Data Flow & Module Interaction Diagram (High-Level)
+
+ [User] 
+  │
+  ▼
+ [GUI Module (Tkinter)]
+  │  • Captures input fields and button click.
+  │  • Validates UI-level interactions.
+  ▼
+ [Calculator Module]
+  │  • Validates inputs further (numeric, non-blank).
+  │  • Invokes arithmetic functions.
+  │  • Interacts with Exception Handling Module for errors.
+  ▼
+ [Exception Handling Module]
+  │  • Processes invalid inputs or runtime errors.
+  │  • Returns formatted error messages.
+  ▼
+ [Calculator Module]
+  │  • Returns calculation result or error message.
+  ▼
+ [GUI Module]
+  │  • Displays result/error message to the user.
+
+─────────────────────────────  
+5. Maintainability and Extensibility Considerations
+
+• Modularity:  
+  Each module is designed as a separate Python file or package, with clear interfaces to other components.
+  Well-documented code, following PEP 8 guidelines and extensive inline comments/documentation.
+
+• Future Enhancements:  
+  Additional arithmetic functions can be added in the Calculator Module without impacting the GUI.  
+  The GUI module may be refactored later (possibly into a web interface) while the business logic remains largely unchanged.  
+  A logging mechanism for audit trails and debugging can be integrated into the Exception Handling Module.
+
+─────────────────────────────  
+6. Summary
+
+This high-level architecture splits the Simple Calculator application into four main components: the GUI Module (presenting the user interface), the Calculator Module (handling business logic and calculations), the Exception Handling Module (managing errors), and the Testing Module (ensuring reliability and performance). The selected technology stack leverages Python 3.8+ and Tkinter, with additional tools for dependency management (pipenv/virtualenv), containerization (Docker), version control (Git), and testing frameworks (unittest/pytest). This modular design ensures that the application is not only functionally robust and responsive but also maintainable and extensible for future requirements.
+
+This architecture provides a clear path for developers to implement, test, and extend the Simple Calculator software while meeting all specified design requirements and quality standards.

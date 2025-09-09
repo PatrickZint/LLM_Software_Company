@@ -1,0 +1,117 @@
+Below is a high-level system architecture for the two-body orbital simulator. This design separates concerns into distinct layers and modules, leverages Python’s ecosystem, and provides clear extension points for future enhancements.
+
+──────────────────────────────
+1. Architectural Overview
+──────────────────────────────
+The system adopts a layered architecture following an MVC-like pattern:
+
+• Presentation Layer (View)  
+ – Handles the GUI, rendering the 2D simulation display, user interactions, and reporting simulation data.
+
+• Business Logic Layer (Model + Controller)  
+ – Contains the Simulation Core and Physics Engine along with numerical integration methods.  
+ – Encapsulates simulation state, configuration, and orchestrates the simulation loop.  
+ – Acts as “glue” between user inputs (Controller) and the underlying simulation logic (Model).
+
+• Data Layer  
+ – Manages logging of simulation state, exporting data (CSV/JSON), and storing configuration settings.
+
+This separation supports performance optimization, testing, and future scalability (e.g., multi-body or 3D enhancements).
+
+──────────────────────────────
+2. Component Design
+──────────────────────────────
+A. Presentation Layer (GUI & Visualization)
+ • Component: GUI Controller & Renderer  
+  – Framework Options:  
+   ◦ Pygame is recommended for an animated, real-time 2D simulation with effective frame render management.  
+   ◦ Alternatively, Tkinter may be used for simpler GUIs with built-in Python support.  
+ • Responsibilities:  
+  – Render simulation objects as scaled circles with trails indicating trajectories.  
+  – Display vector arrow overlays (velocity/direction).  
+  – Offer user controls (start, pause, resume, reset, simulation speed adjustment).  
+  – Present real-time simulation metrics (positions, velocities, forces) and error messages.
+ • Design Note:  
+  – Decouple rendering from simulation computations via an asynchronous update loop (using Python’s threading or async libraries) so that heavy calculations do not block the UI thread.
+  – Provide tool-tips, online help, and data export dialogs.
+
+B. Business Logic Layer (Simulation Core)
+ • Component: Physics Engine & Simulation Core  
+  – Implements Newton’s law of gravitation, state updates (acceleration, velocity, position), and error handling.  
+ • Numerical Integration Module  
+  – Supports multiple numerical integration methods:  
+   ◦ Fast “less accurate” mode using Euler’s method.  
+   ◦ More precise “accurate” mode using Runge-Kutta 4th order.  
+  – Exposes API methods for switching integration methods on the fly.
+ • Parameter & Input Validation Module  
+  – Validates gravitational constant (G), body masses, and initial state values (position, velocity).  
+  – Deals with edge cases (e.g., collisions, bodies exiting the view, or unstable parameter values) by triggering fallback defaults or alerts.
+ • Time Management Module  
+  – Configurable time step handling, including toggling between “real time” and “accelerated time” modes.  
+  – Logs simulation states and performance metrics per time increment.
+
+C. Data Layer (Data Logging & Configuration)
+ • Component: Data Export & Logging Manager  
+  – Maintains an in-memory buffer or file-system-based logs for simulation state updates.  
+  – Supports data export formats like CSV and JSON.
+ • Component: Configuration Manager  
+  – Stores persistent simulation settings and user preferences.
+ • Design Note:  
+  – Provide interfaces for performance monitoring (e.g., simulation step duration, frame update times).
+
+──────────────────────────────
+3. Technology Stack Selection
+──────────────────────────────
+• Primary Programming Language:  
+ – Python (for ease of development, rich scientific libraries, and community support)
+
+• Key Libraries & Frameworks:  
+ – NumPy and SciPy for numerical computations, vectorized operations in force calculations, and integration routines.  
+ – Pygame for 2D GUI/visualization (offering efficient game-loop rendering and easy event handling).  
+ – Optionally, Tkinter if a simpler, built-in GUI approach is preferred.  
+ – Threading or Asyncio for asynchronous execution ensuring that heavy simulation computations do not block UI updates.  
+ – Logging module for runtime performance monitoring and debugging.
+
+• Performance Enhancements:  
+ – Evaluate the use of Cython or C/C++ extensions for the physics engine if simulation scales or performance targets aren’t met.  
+ – Use NumPy’s vectorized operations to accelerate computations.
+
+• Testing Frameworks:  
+ – PyTest (for unit and integration tests of simulation algorithms and module interfaces).  
+ – Automated performance/benchmark tests to verify responsiveness (e.g., ensuring a minimal 30 fps in “real time” mode).
+
+──────────────────────────────
+4. Inter-Component Communication & Data Flow
+──────────────────────────────
+• User Input Flow:  
+ 1. User interacts via the GUI (start/pause, change parameters, export data).  
+ 2. GUI Controller sends events to the Business Logic Layer (e.g., update simulation parameters).
+ 
+• Simulation Processing Flow:  
+ 1. The Physics Engine computes gravitational forces using configured parameters.  
+ 2. The Numerical Integration Module updates acceleration, velocity, and positions.  
+ 3. The Time Management Module tracks steps and logs the simulation state.
+ 
+• Rendering Flow:  
+ 1. The Presentation Layer receives updated state data asynchronously from the Business Logic Layer.  
+ 2. The GUI Renderer refreshes visual elements—bodies, trajectories, and overlays—independent of computation.
+ 
+• Logging & Export Flow:  
+ 1. State data is forwarded to the Data Logging Manager concurrently with simulation steps.  
+ 2. When requested, the Data Layer exports collected data in CSV/JSON formats.
+
+──────────────────────────────
+5. Future-Proofing & Extensibility Considerations
+──────────────────────────────
+• Modular Design:  
+ – Clearly defined module interfaces allow the addition of multi-body systems or 3D simulation enhancements.  
+ – API contracts between the physics engine and UI components ensure that enhancements (such as non-Newtonian force support) are easier to integrate.
+
+• Documentation & Developer Support:  
+ – Maintain inline code documentation, detailed module descriptions, and architecture diagrams.  
+ – Provide user manuals/tutorials that describe how to modify parameters and choose simulation modes.
+
+──────────────────────────────
+Conclusion
+──────────────────────────────
+This high-level architecture supports a responsive, accurate, and extensible two-body orbital simulator. By cleanly separating the simulation core, visualization, and data management, the design meets defined performance KPIs and reliability targets while remaining adaptable for future enhancements. The chosen Python-based technology stack and modular design patterns ensure ease of development, testing, and optimization as simulation complexity grows.

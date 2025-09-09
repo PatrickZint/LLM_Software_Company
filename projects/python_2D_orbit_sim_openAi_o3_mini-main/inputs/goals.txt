@@ -1,0 +1,5 @@
+Build a simple 2D orbital simulator for two celestial bodies using Newtonian physics.
+Features:
+- Calculate gravitational forces, velocities, and positions
+- Output the forces and positions at each time step
+- 2D visualization in a GUI window

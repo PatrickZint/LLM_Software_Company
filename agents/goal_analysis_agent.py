@@ -7,6 +7,15 @@ class GoalAnalysisAgent:
         self.github = github_manager
     
     def process_goals(self, goals_file):
+        # Read file locally
+        with open(goals_file, 'r', encoding='utf-8') as f:
+            goals_content = f.read()
+
+        prompt = f"You are a requirements engineer. These are goals of a future software, analyze and refine them: {goals_content}"
+
+        refined_goals = self.llm.get_chat_response(prompt)
+
+        """
         goals_content = self.github.read_file(goals_file)
         prompt = f"You are a requirements engineer. These are goals of a future software, analyze and refine them: {goals_content}"
         
@@ -26,5 +35,6 @@ class GoalAnalysisAgent:
                 self.github.create_file(file_path, commit_message, refined_goals)
             else:
                 raise e
+        """
         
         return refined_goals

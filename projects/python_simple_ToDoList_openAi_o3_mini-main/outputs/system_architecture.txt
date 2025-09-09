@@ -1,0 +1,148 @@
+Below is a high-level system architecture for the ToDo-List desktop application. It leverages a Model–View–Controller (MVC) pattern with a modular design to isolate business logic, persistence, and user interface concerns. This approach not only meets current functional and non-functional requirements but also enables future extensibility.
+
+────────────────────────────
+1. Overall Architectural Diagram
+
+               ┌────────────────────────────┐
+               │        User Actions        │
+               │ (Button clicks, text input)│
+               └────────────▲───────────────┘
+                            │
+                            ▼
+               ┌────────────────────────────┐
+               │         Controller         │
+               │ - Handles UI events        │
+               │ - Validates inputs         │
+               │ - Invokes business logic   │
+               └────────────▲───────────────┘
+                            │
+           ┌────────────────┼────────────┐
+           │                             │
+           ▼                             ▼
+ ┌─────────────────┐          ┌────────────────────────┐
+ │      Model      │          │   Persistence Module   │
+ │  (Domain Logic) │ ◄──────► │   (FileManager Class)  │
+ │ - Task objects  │          │ - Reads/Writes JSON    │
+ │ - Business rules│          │ - Data integrity checks│
+ └─────────────────┘          └────────────────────────┘
+           │
+           ▼
+ ┌─────────────────────────────┐
+ │          View               │
+ │  (Graphical User Interface) │
+ │ - Tkinter widgets           │
+ │ - List display, forms, etc. │
+ │ - Visual differentiation    │
+ └─────────────────────────────┘
+                            │
+                            ▼
+                  ┌─────────────────┐
+                  │     Logging &   │
+                  │   Error Handling│
+                  └─────────────────┘
+
+────────────────────────────
+2. Component Design and Responsibilities
+
+A. Model Layer
+   • Task Object:  
+       - Represents a single task with attributes such as description, due date, priority, category, and status.
+       - Includes methods to update task properties and mark tasks as complete.
+   • Business Logic Module (Task Manager):  
+       - Manages the collection of Task objects.
+       - Provides operations for adding, updating, and deleting tasks.
+       - Implements input validation and status checking.
+   • Technology:  
+       - Written in Python (3.8+).  
+       - Python classes representing tasks and associated business logic.
+
+B. Persistence Module
+   • FileManager Class:
+       - Encapsulates interaction with a JSON file.
+       - Provides methods like load_data() and save_data() that are invoked when tasks are added, updated, or removed.
+       - Implements data integrity checks and error logging.
+       - Optionally employs techniques (e.g., file locking or atomic writes) to ensure reliable file operations.
+   • Technology:  
+       - Python’s built-in json library.
+       - Exception handling for error detection and rollback in case of failures.
+
+C. View Layer
+   • GUI Module:
+       - Built using Tkinter for cross-platform compatibility (Windows, macOS, Linux).
+       - Contains widgets including text entry fields, buttons (Add, Edit, Delete, Mark Complete), and a task display list widget (ListBox, Treeview, or Table depending on widget availability).
+       - Visual differentiation: For example, applying strikethrough or color changes to completed tasks.
+       - Responsive design: Ensures render and update of elements stay within 100ms.
+   • Technology:
+       - Tkinter built into Python.
+       - Adoption of responsive layout management (grid or pack managers) for consistency across platforms.
+
+D. Controller Layer
+   • Controller Module:
+       - Bridges the View and Model layers.
+       - Captures user interactions (e.g., button clicks), validates data, updates the Model, and refreshes the View.
+       - Delegates persistence operations to the FileManager module after model updates.
+       - Incorporates error handling and logging (e.g., logging file I/O errors).
+   • Technology:
+       - Python, orchestrating method calls between Model, View, and Persistence modules.
+       - Could incorporate concurrency control (via Python threading if future operations become long-running) to ensure smooth GUI updates.
+
+E. Supporting Components
+   • Logging and Error Handling Module:
+       - Handles logging of key events such as file writes, user actions, and encountered errors.
+       - Provides error feedback/logs to the console or log files to support debugging.
+       - Follows secure coding practices and can be extended to notify users of critical errors.
+   • Testing and CI:
+       - Automated unit tests for each module (e.g., using unittest or pytest) to cover adding, updating, deleting tasks and verifying persistence.
+       - CI integrations using tools like GitHub Actions to run tests on each commit.
+
+────────────────────────────
+3. Technology Stack
+
+• Programming Language:  
+   - Python 3.8 or later.
+
+• GUI Framework:  
+   - Tkinter (comes standard with Python) for building cross-platform desktop applications.
+   - Optionally, frameworks like PyQt or Kivy could be considered for more advanced UI in future iterations, but Tkinter meets current requirements.
+
+• Persistence:  
+   - JSON file-based storage using Python’s json library.
+   - File handling in a dedicated FileManager class to keep I/O operations modular and ensure atomic updates.
+
+• Concurrency:  
+   - Python’s threading module for offloading long-running operations if needed (to maintain UI responsiveness).
+
+• Dependency Management & Packaging:  
+   - A requirements.txt or Pipfile to manage dependencies and package versions.
+   - Built-in Python modules mostly; additional libraries as needed (e.g., for logging enhancements).
+
+• Testing Frameworks:  
+   - unittest or pytest for unit testing.
+   - Possibly use CI tools (e.g., GitHub Actions, Travis CI) for automation checking test suites.
+
+• Source Control & Versioning:  
+   - Git for source code versioning.
+   - Code signing/versioning practices for secure and traceable deployment if distributed.
+
+────────────────────────────
+4. Key Considerations for Future Enhancements
+
+• Scalability:  
+   - Abstract the persistence module so that switching to an online or cloud-based storage solution involves minimal code changes.
+   - Design clear APIs between modules for easy integration of new functionalities (e.g., task filtering, categorization).
+
+• Security:  
+   - Enforce input validation in the Controller.
+   - Ensure proper error handling/logging.
+   - Prepare the groundwork for data encryption (e.g., AES-256) when sensitive data or authentication is introduced.
+
+• Maintainability:  
+   - Keep modules self-contained and well-documented with inline comments and external documentation.
+   - Use continuous integration testing to ensure that performance benchmarks (e.g., UI update times under 100ms) are met after each change.
+
+────────────────────────────
+5. Summary
+
+The high-level architecture uses an MVC pattern to clearly separate task representation (Model), the GUI (View), and the interaction logic (Controller). Persistence is handled through a dedicated FileManager class that reads/writes a JSON file, ensuring that task data is reliably stored and remains consistent. Python and Tkinter form the foundation of the technology stack, ensuring cross-platform compatibility and ease of maintenance. The modular design allows for future expansion—whether for additional features, performance improvements through off-thread operations, or enhanced security measures—with minimal disruption to the core system.
+
+This architecture meets the functional requirements of task management, provides a clear path for data persistence and recovery mechanisms, and ensures a responsive, user-friendly GUI while adhering to secure coding and maintainability best practices.

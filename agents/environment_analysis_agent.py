@@ -4,6 +4,15 @@ class EnvironmentAnalysisAgent:
         self.github = github_manager
     
     def analyze_environment(self, env_file):
+        # Read file locally
+        with open(env_file, 'r', encoding='utf-8') as f:
+            env_content = f.read()
+
+        prompt = f"You are a software engineer. These environmental constraints are for a software to be developed. Analyze and refine them: {env_content}"
+
+        env_profile = self.llm.get_chat_response(prompt)
+
+        """
         env_content = self.github.read_file(env_file)
         prompt = f"You are a software engineer. These environmental constraints are for a software to be developed. Analyze and refine them: {env_content}"
                 
@@ -23,6 +32,6 @@ class EnvironmentAnalysisAgent:
                 self.github.create_file(file_path_output, commit_message, env_profile)
             else:
                 raise e
-
+        """
 
         return env_profile

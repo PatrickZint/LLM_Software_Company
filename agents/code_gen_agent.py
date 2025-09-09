@@ -7,10 +7,18 @@ class CodeGenerationAgent:
         self.llm = llm_reasoner
         self.github = github_manager
 
-    def generate_codebase(self, architecture_file, specifications_file):
+    def generate_codebase(self, architecture_file, specifications_file, outputs_dir):
+        # Read file locally
+        with open(architecture_file, 'r', encoding='utf-8') as f:
+            architecture = f.read()
+        with open(specifications_file, 'r', encoding='utf-8') as f:
+            specifications = f.read()
+
+        """
         # Read system architecture and specifications from GitHub
         architecture = self.github.read_file(architecture_file)
         specifications = self.github.read_file(specifications_file)
+        """
 
         # Generate codebase
         prompt = (
@@ -29,21 +37,23 @@ class CodeGenerationAgent:
             f"System Specifications:\n{specifications}"
         )
 
-        #codebase = self.llm.get_chat_response(prompt)
+        codebase = self.llm.get_chat_response(prompt)
+        """
         codebase = self.llm.get_chat_response(
             prompt#,
             #response_format={ "type": "json_object" }
         ) # Get the response in JSON format
+        """
 
         print(codebase)
 
         # Save codebase
-        txt_path = 'outputs/generated_codebase.txt'
+        txt_path = os.path.join(outputs_dir, 'generated_codebase.txt')
 
         with open(txt_path, 'w', encoding='utf-8') as f:
             f.write(codebase)
 
-        file_path = 'outputs/generated_codebase.zip'
+        file_path = os.path.join(outputs_dir, 'generated_codebase.zip')
 
         codebase = save_codebase_as_zip(txt_path, file_path)
 

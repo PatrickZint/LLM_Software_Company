@@ -1,0 +1,3 @@
+The system must provide a reasonable performance.
+The result should be a functional application with, so if necessary, create required config files.
+Technology stack: Use Python and pygame for development

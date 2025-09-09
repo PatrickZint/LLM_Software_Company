@@ -1,0 +1,2 @@
+Code a Simple Calculator in Python. It should have a user interface that allows users to perform basic arithmetic operations like addition, subtraction, multiplication, and division.
+The calculator should handle errors, such as division by zero or invalid input. Create a simple graphical user interface using a library like Tkinter.

@@ -1,0 +1,1 @@
+The system must provide a reasonable performance. Technology stack: Use Python and Tkinter.

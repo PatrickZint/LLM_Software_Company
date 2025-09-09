@@ -1,0 +1,1 @@
+Code a simple ToDo-List in Python. It should have a graphical user interface.
