@@ -1,0 +1,16 @@
+database:
+  path: "results.db"
+
+image:
+  threshold: 30
+  supported_formats:
+    - "png"
+    - "jpg"
+    - "jpeg"
+
+export:
+  path: "exported_diffs"
+
+logging:
+  level: "INFO"
+  file: "app.log"

@@ -1,2 +1,3 @@
 Not Working:
-python_budget_planner_openAi_o3_mini
+python_budget_planner_openAi_o3_mini -> indentation error
+python_screenshot_diff_tracker_openAi_o3_mini -> with UI

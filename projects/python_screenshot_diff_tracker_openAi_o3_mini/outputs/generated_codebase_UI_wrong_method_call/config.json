@@ -1,0 +1,8 @@
+{
+  "output_directory": "./diff_output",
+  "database": "comparisons.db",
+  "tolerance": 10,
+  "highlight_color": [0, 0, 255],
+  "supported_formats": [".png", ".jpg", ".jpeg", ".bmp"],
+  "resize_strategy": "error"  
+}
