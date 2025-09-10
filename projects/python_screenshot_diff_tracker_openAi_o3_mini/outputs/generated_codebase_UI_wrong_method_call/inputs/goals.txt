@@ -1,0 +1,7 @@
+Create a tool that compares two screenshots and highlights visual differences.
+The result should be a functional application with a UI, so if necessary, create required config files.
+Features:
+- Accept two image files as input
+- Detect and highlight pixel-level differences
+- Store comparison results and metadata in a database
+- Export diff images to a specified directory

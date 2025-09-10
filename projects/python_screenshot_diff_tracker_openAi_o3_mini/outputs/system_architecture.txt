@@ -1,132 +1,171 @@
-Below is a high-level system architecture for the screenshot–comparison tool. This design emphasizes clear separation of concerns into layers (presentation, business logic, and data access) as well as a modular design that allows ease of maintenance and future extension. In addition, the technology stack is chosen to match the requirements specified.
+Below is a high-level system architecture that meets the given specifications. This design identifies separate functional components and maps them to a concrete technology stack that leverages Python’s rich ecosystem for cross-platform desktop applications, image processing, configuration management, and (if desired) persistence.
 
-──────────────────────────────
-1. Overall Architectural Layers
+──────────────────────────────────────────────  
+1. OVERALL ARCHITECTURE & COMPONENT DIAGRAM
 
-A. Presentation Layer (GUI)  
- • Responsibility: Handle user interactions, file selection, configuration adjustments, and display results (original images and diff image).  
- • Key Components:  
-  – Main Window: Hosts panels and toolbars for navigation, status messages, and progress indicators.  
-  – Image Selection Panel: Includes file dialogs and supports drag-and-drop functionality for loading images.  
-  – Preview & Comparison Panel: Displays loaded images side-by-side (or in an overlaid split view) and shows the generated diff image.  
-  – Options/Settings Panel: Provides interactive controls for setting the pixel tolerance, output directory, and preferences (with support for both in-app settings and external configuration file editing).  
- • Technology:  
-  – Python GUI framework such as PyQt5 (or PyQt6), Tkinter, or Kivy.  
-  – UI elements include buttons, sliders, progress bars, tooltips, and dialogs for file selection and error messages.
+          +-------------------------------------------------------+
+          |                 Desktop Application                 |
+          |   (Cross-Platform UI, Business Logic, Persistence)    |
+          +--------------------------+----------------------------+
+                                     │
+           ┌─────────────────────────┴─────────────────────────┐
+           │                                                   │
+   +-------▼-------+                                   +-------▼-------+
+   |   UI Module   |                                   |   Core API    |
+   | (Presentation)|                                   | (Logic Manager)|
+   +-------+-------+                                   +-------+-------+
+           │                                                   │
+           │  Calls via well-defined interfaces                │
+           │                                                   │
+  ┌────────▼────────┐                                  ┌───────▼──────────┐
+  | Image Processing|                                  | Configuration &  |
+  |    Module       |                                  |  Settings Module |
+  | (Pillow & OpenCV)|                                 | (JSON/YAML Parser)|
+  └────────+────────┘                                  └───────+──────────┘
+           │                                                   │
+           │                                                   │
+   ┌───────▼────────┐                                  ┌───────▼─────────┐
+   | Export Module  |                                  | Database Module | (Optional)
+   | (File I/O,     |                                  | (SQLite3)       |
+   | Permission &   |                                  |                 |
+   | Format Handling)|                                 └─────────────────┘
+   └────────────────┘
 
-B. Business Logic Layer (Image Comparison Engine)  
- • Responsibility: Handles core application logic including image loading, conversion, pixel-level comparison, diff image generation, and error handling.  
- • Key Components:  
-  1. Image Loader/Validator:  
-   – Uses Pillow to load images, detect formats (PNG, JPEG, BMP), and validate image dimensions.  
-   – Provides options to automatically scale images if dimensions differ (controlled via configuration).  
-  2. Image Conversion Utilities:  
-   – Functions that reliably convert Pillow Image objects to OpenCV-compatible NumPy arrays and vice versa.  
-  3. Comparison Engine:  
-   – Applies pixel-by-pixel comparison between images with an adjustable tolerance threshold (user defined via UI or config file).  
-   – Leverages OpenCV for efficient matrix operations and diff calculation.  
-  4. Diff Image Generator:  
-   – Processes the comparison result to create a new diff image highlighting mismatches (using contrasting colors such as red).  
-  – Error Handling & Logging:  
-   – Uses Python’s logging module to record logs (both to a file and optionally to a database) for errors, warnings, and user actions.
- • Technology:  
-  – Python 3.8+  
-  – Pillow (e.g., Pillow 9.x) for initial image I/O and format conversion.  
-  – OpenCV (e.g., opencv-python 4.x) for efficient image processing and pixel-level operations.
+Legend:
+• UI Module – Provides dialogs, displays, configuration panels, and progress/error notifications.
+• Core API – Manages application logic, acting as an orchestrator that coordinates requests from the UI to the image processing, configuration, and export modules.
+• Image Processing Module – Uses Pillow for initial image handling and OpenCV for pixel-level comparison, applying tolerance values and generating annotated “diff” images.
+• Configuration Module – Parses external config files (JSON, YAML, or XML), provides application settings (default tolerance, theme, export directory) to other modules, and listens for dynamic changes.
+• Export Module – Handles validations (such as file permissions) and saving the generated diff image to user-specified directories.
+• Database Module – Optionally persists user preferences, usage logs, or past comparisons using the embedded SQLite3 database.
 
-C. Data Access Layer  
- • Responsibility: Manage persistence for user preferences, configuration settings, and logs, ensuring they are available across sessions.  
- • Key Components:  
-  1. Configuration Manager:  
-   – Reads from / writes to a configuration file (JSON, YAML, or INI) to load default settings (e.g., default tolerance, file paths, UI themes).  
-   – Provides interfaces for both in-app modifications (via the settings panel) and manual config file editing (for advanced users).  
-  2. Preferences & Log Storage:  
-   – Uses SQLite3 for lightweight storage if persistent user preferences or logs are required.  
-   – Alternatively, might use local configuration files for simple setups.
- • Technology:  
-  – SQLite3 (bundled with Python) or standard file I/O for config files (JSON/YAML/INI).
+──────────────────────────────────────────────  
+2. COMPONENT DESIGN DETAILS
 
-──────────────────────────────
-2. Detailed Component Design and Data Flow
+A. UI Module  
+   • Purpose: Provide a user-friendly graphical interface for loading images, displaying side-by-side and diff views, adjusting tolerance, and saving outputs.
+   • Technologies:
+     – GUI Framework: PyQt5 or PySide2 (for advanced features and cross-platform consistency) or Tkinter for simpler UIs.
+     – Standard dialogs for file selection, notifications, and error messages.
+     – Asynchronous or multi-threaded operations (using Python’s threading or async modules) to keep the UI responsive while processing images.
+   • Responsibilities:
+     – Render input and output panels.
+     – Accept user input (file selections, tolerance adjustments).
+     – Display progress notifications and error dialogue boxes.
+     – Relay UI events to the Core API for further processing.
 
-A. Startup and Initialization  
- • On application launch, the configuration manager loads user settings from the configuration file and, if enabled, from SQLite3.  
- • The main window initializes and all visual panels (image selection, preview, options/settings) are presented.
+B. Core API / Application Logic Layer  
+   • Purpose: Serve as the mediator that handles business logic and routes data between UI and backend components.
+   • Responsibilities:
+     – Accept image file paths and tolerance values from the UI.
+     – Validate configuration settings and pass them to modules.
+     – Coordinate the sequence: input validation → image loading → processing → diff generation → file export.
+     – Utilize observer/callback mechanisms to update the UI with progress or error updates.
+   • Technology: Regular Python modules structured using a Model–View–Controller (MVC) or Model–View–Presenter (MVP) pattern to decouple concerns.
 
-B. Image Selection and Loading  
- • User selects or drags-and-drops two screenshot files via the Image Selection Panel.  
- • The Image Loader handles file I/O (using Pillow) and performs initial validations such as format verification and dimension checks.  
- • In case of mismatched dimensions, the component either auto-scales the image or notifies the user, depending on the configuration setting.
+C. Image Processing Module  
+   • Purpose: Execute image file I/O, validate inputs, perform pixel-by-pixel comparison and annotate differences.
+   • Technologies:
+     – Pillow (as the initial image loading and basic manipulation library).
+     – OpenCV (for optimized pixel comparisons and drawing annotations).
+   • Design:
+     – Separate functions for file loading, dimension matching (including prompting for cropping/resizing when needed), and tolerance-based pixel comparisons.
+     – Modular design to allow later substitution of enhanced algorithms.
+   • Integration:
+     – Provides an interface that accepts two image objects and returns an annotated diff image as a Pillow or OpenCV image.
+     – Uses conversion routines between Pillow images and OpenCV arrays as needed.
 
-C. Image Comparison Process  
- • Conversion:  
-  – The loaded Pillow images are converted to NumPy arrays so they are compatible with OpenCV processing routines.  
- • Comparison:  
-  – The Comparison Engine performs a pixel-by-pixel evaluation.  
-  – The user-defined tolerance parameter (from the UI or config file) is applied to account for compression artifacts or anti-aliasing.  
- • Diff Generation:  
-  – A new image (the diff image) is built by highlighting differing pixels (e.g., with a red overlay) while preserving the rest of the image context.  
-  – The diff image is converted back as necessary (e.g., from NumPy array to Pillow Image) for display and export.
+D. Configuration Management Module  
+   • Purpose: Load and manage user/application settings.
+   • Technologies:
+     – Python’s built-in JSON or PyYAML libraries for parsing external configuration files.
+     – Optional: XML parsing if XML configuration is chosen.
+   • Responsibilities:
+     – Read default settings (tolerance, export directory, UI theme) at startup.
+     – Provide APIs for runtime queries/modifications (in the event of dynamic configuration changes).
+     – Persist changes gracefully (if immediate changes are supported).
+  
+E. Export and File Management Module  
+   • Purpose: Write out the diff image to a user-specified directory and format.
+   • Technologies:
+     – Standard Python file I/O.
+     – Integration with Pillow/OpenCV to save images in PNG/JPEG.
+   • Responsibilities:
+     – Validate destination paths and file system permissions.
+     – Provide confirmation or error messages to the Core API based on export success or failure.
+  
+F. Database Module (Optional)  
+   • Purpose: Manage persistent state such as user preferences, logs, and historical comparisons.
+   • Technology:
+     – SQLite3 (via Python’s built-in library) for lightweight persistence.
+   • Responsibilities:
+     – Define a lightweight schema.
+     – Provide APIs for logging usage events or saving user-specific settings.
+     – Use migration strategies for future enhancements.
 
-D. Post-Processing and Export  
- • Once the diff image is generated, the Preview Panel displays it to the user.  
- • The Export functionality allows the user to choose an output directory and confirms the export (defaulting to PNG but configurable if required).  
- • The application gives clear feedback upon a successful export or displays error messages in case of issues.
+──────────────────────────────────────────────  
+3. TECHNOLOGY STACK SELECTION
 
-E. Error Handling, Logging, and User Feedback  
- • Error handling is integrated at each stage (loading, conversion, comparison, export):  
-  – For instance, if file formats are unsupported or if images cannot be processed, the system notifies the user with contextual error messages via the GUI.  
-  – Logging is performed (using Python’s logging module) with meaningful messages stored in a file and optionally in the database for troubleshooting.
- • UI components such as progress bars and status labels provide immediate visual feedback during longer processing operations.
+Language and Runtime:
+   – Python 3.8 or newer (ensures compatibility with modern libraries and cross-platform support).
 
-──────────────────────────────
-3. Technology Stack and Environment Management
+Core Image Libraries:
+   – Pillow (e.g., version 9.x) for image loading and basic I/O.
+   – OpenCV (e.g., opencv-python 4.x and optionally opencv-contrib-python) for advanced image processing tasks.
 
-A. Programming Language  
- • Python 3.8+ is used as the primary development language.
+GUI Framework:
+   – Primary Recommendation: PyQt5/PySide2 for a rich, cross-platform GUI experience.
+   – Alternatively: Tkinter for a simpler interface if execution simplicity is desired.
 
-B. Image Processing Libraries  
- • Pillow – for image I/O, loading, and basic format conversions.  
- • OpenCV (opencv-python) – for advanced processing and pixel-level comparisons.
+Configuration and Parsing:
+   – Python’s json module or PyYAML for handling JSON or YAML config files.
+   – Consider xml.etree.ElementTree if XML configuration is required.
 
-C. Persistence Technologies  
- • SQLite3 – for storing user preferences, logs, and history if required.  
- • Configuration files (JSON, YAML, or INI) – provide an easily editable mechanism for advanced settings.
+Persistence (Optional):
+   – SQLite3 via Python’s built-in sqlite3 module for persistence of user settings and logs.
 
-D. Dependency & Environment Management  
- • Virtual environments (venv or Conda) will be used to isolate dependencies.  
- • A requirements.txt (or Pipfile) will pin all versions ensuring reproducibility.  
- • (Optional) Dockerfile available for containerized deployment across platforms.
+Dependency Management:
+   – Virtual Environments: Use venv, virtualenv, or Conda for environment isolation.
+   – Package Management: Use a requirements.txt file or tools like Pipenv/Poetry to lock dependency versions.
 
-E. GUI Framework  
- • Primary desktop GUI can be developed with PyQt (or other candidate frameworks like Tkinter or Kivy) ensuring cross-platform compatibility (Windows, macOS, Linux).  
- • For future web extensions, the GUI components or processing logic can be adapted to frameworks such as Flask or Django for handling file uploads and serving image data securely.
+Testing and CI:
+   – Unit Testing Frameworks: pytest or unittest.
+   – Continuous Integration: GitHub Actions, Travis CI, or similar CI platforms for automated testing on multiple OS environments.
 
-──────────────────────────────
-4. Integration Strategy Between Pillow and OpenCV
+──────────────────────────────────────────────  
+4. MODULE INTERACTION AND DATA FLOW
 
-• Define clear conversion utilities that:  
- – Convert Pillow Image objects to NumPy arrays (using numpy.array(image)) for OpenCV processing.  
- – Convert the resulting NumPy arrays (processed diff image) back to Pillow Image objects for display and export.  
-• Ensure that conversion routines are optimized to avoid performance overhead.
+1. User launches the application (UI Module).  
+2. From the UI, the user selects two images using file dialogs.  
+3. The UI calls the Core API with these file paths and any configured tolerance value (fetched via the Configuration Module).  
+4. The Core API initiates the image processing workflow in the Image Processing Module:  
+ a. The module uses Pillow to load the images and check compatibility.  
+ b. If dimensions mismatch, the UI is prompted via a callback mechanism.  
+ c. OpenCV performs pixel-by-pixel comparison and generates the annotated diff image based on the tolerance parameter.
+5. The ready diff image is passed back to the Core API, which then instructs the UI to display it in a dedicated panel.
+6. When the user opts to save the diff image, the UI calls the Export Module with the chosen output path and required format.
+7. The Export Module validates permissions and saves the file, returning success or error status to the Core API.
+8. Throughout the process, logging and error handling (optionally recorded using the Database Module) ensure that messages are available for debugging and user notifications.
 
-──────────────────────────────
-5. Future Extensibility and Platform Considerations
+──────────────────────────────────────────────  
+5. FUTURE EXPANSIONS
 
-• Web Extension:  
- – If a web version is pursued, the core comparison engine remains modular, and a REST API (using Flask/Django) can be wrapped around it.  
- – File handling must guarantee secure upload and processing, potentially using secure temporary storage.  
+• The modular design allows simple substitution of the image processing algorithm or expanding the UI with new features (such as batch processing).  
+• The Database Module can later be extended to store more detailed logs or usage analytics without impacting core functionality.  
+• Adding new image formats, additional configuration file types, or even enhanced comparison strategies can be achieved by extending the existing modules while maintaining clear interfaces for integration.
 
-• Cross-platform Portability  
- – Platform-specific dependencies (especially concerning OpenCV libraries) are clearly documented.  
- – Containerization (via Docker) offers a fallback for any environment-specific issues, ensuring consistent deployments across Windows, macOS, and Linux.
+──────────────────────────────────────────────  
+CONCLUSION
 
-──────────────────────────────
-Conclusion
+This high-level system architecture divides the application into clearly defined modules:
 
-This high-level architecture divides responsibilities into three primary layers:  
- 1. The Presentation Layer manages all user interactions through a cross-platform GUI.  
- 2. The Business Logic Layer encapsulates image processing and comparison functions – using Pillow and OpenCV – in a modular, maintainable way.  
- 3. The Data Access Layer handles persistent configuration and logging using config files and optionally SQLite3.
+– A UI Module for cross-platform user interactions using PyQt5/PySide2 (or Tkinter as an alternative).  
+– A Core API layer that orchestrates interactions between the UI and back-end functions.  
+– A robust Image Processing Module leveraging Pillow and OpenCV for pixel-accurate comparisons.  
+– A Configuration Management module for dynamically loading and managing application settings.  
+– An Export Module for handling file saving with proper validations.  
+– An optional Database Module for lightweight persistence via SQLite3.
 
-By adhering to modular design principles and leveraging Python’s robust ecosystem (with dependency management via virtual environments and requirements files, plus optional Docker deployment), the system is built to be scalable, maintainable, and extensible. This blueprint sets a solid foundation for both a desktop application and potential future web-based extensions.
+The selected technology stack (Python 3.8+, Pillow, OpenCV, PyQt/PySide or Tkinter, and SQLite3) ensures that the solution is cross-platform, modular, maintainable, and extensible enough to meet both current and future requirements.
+
+This architecture provides a clear blueprint for developers to implement a scalable, maintainable solution while keeping the user experience simple and intuitive.

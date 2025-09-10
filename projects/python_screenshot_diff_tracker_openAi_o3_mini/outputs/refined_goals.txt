@@ -1,79 +1,101 @@
-Below is an analysis and refined set of requirements based on the initial goals:
+Below is an analysis of the initial goals followed by a refined set of requirements. The objective was to build a screenshot comparison tool with a graphical user interface (GUI) that highlights pixel-level differences and manages inputs/outputs. The following breakdown refines these goals into clearer, more testable, and complete requirements.
 
-─────────────────────────────────────────────  
-1. Overall Objective
+──────────────────────────────
+1. Overall Product Vision
 
-• Develop a user-friendly application that compares two screenshot images and visually highlights the pixel-level differences.  
-• Provide a graphical user interface (GUI) that facilitates image selection, comparison, and export of results.  
-• Include appropriate configuration options (via config files or UI settings) if needed for customizations.
+• Goal: Develop a cross-platform (desktop) application that helps users compare two screenshots, visually highlighting differences, and allows exporting of the annotated diff images.
+• Scope: A UI-based tool that accepts image inputs, processes and identifies pixel-level differences, and supports saving the resulting annotated images in a user-defined output directory. Additionally, any needed project configuration (including files for deployment, localization, or user settings) should be included.
 
-─────────────────────────────────────────────  
+──────────────────────────────
 2. Functional Requirements
 
-A. Image Input  
- • The application shall allow the user to select two image files (e.g., PNG, JPEG, BMP) as inputs.  
- • The application shall validate that the provided images are compatible (e.g., same dimensions or provide guidance on handling different dimensions).  
- • (Optional) Provide drag-and-drop functionality for ease-of-use.
+2.1. Image Input
+ • FR-1: The application shall allow the user to select and load exactly two image files.
+  – Accept common formats (e.g., PNG, JPEG, BMP) as input.
+  – Validate that the selected images are readable and in supported formats.
+  – In the case of an invalid or incompatible file, provide a clear error message.
 
-B. Image Comparison  
- • The application shall perform a pixel-by-pixel comparison of the two images.  
- • The algorithm shall support a tolerance threshold to account for minor variations (e.g., due to compression or anti-aliasing), configurable either via the UI or a config file.  
- • If the images differ in size, the system shall either scale one to match the other or notify the user, according to a clearly defined strategy.  
- • The application shall generate a “diff image” that visually highlights the differences (for example, using contrast colors such as red).
+2.2. Image Comparison and Difference Detection
+ • FR-2: The application shall compare the two input images pixel by pixel.
+  – Define the algorithm: For each pixel, determine if its value differs beyond an optional configurable tolerance value (support minor differences if needed).
+  – Consider handling images with different dimensions: prompt the user to crop/resize or abort comparison with a detailed message.
 
-C. Diff Image Export  
- • The application shall allow the user to export the resulting diff image.  
- • The user shall be able to specify an output directory where the diff image(s) will be saved.  
- • The exported file format(s) shall be documented (e.g., PNG by default) and optionally configurable.
+ • FR-3: The application shall generate an output “diff image” that visually highlights all detected differences.
+  – The differences should be clearly marked (for example, by outlining or highlighting changed areas in a contrasting color).
+  – Consider allowing an adjustable sensitivity setting for detecting differences.
 
-D. Configuration and Customization  
- • The application shall provide (or generate) configuration files if required (e.g., settings for tolerance thresholds, default input/output directories, UI themes).  
- • The configuration should be easily customizable by advanced users, with UI settings available for standard users.
+2.3. User Interface (UI)
+ • FR-4: The application shall provide a user-friendly GUI.
+  – Include file selection dialogs for input images.
+  – Display both original images side-by-side and the resulting diff image.
+  – Provide feedback on the comparison process (e.g., progress indicators, success/failure notifications).
+  – Include configuration options (e.g., tolerance level) accessible through the UI.
 
-─────────────────────────────────────────────  
+2.4. Exporting Diff Images
+ • FR-5: The application shall allow the user to export and save the diff image to a specified directory.
+  – Allow the user to choose the destination directory.
+  – Provide feedback upon successful save or notify the user in case of errors.
+  – Support selecting a file format for the output, if feasible.
+
+2.5. Configuration Files and Settings
+ • FR-6: The application shall support configurable settings.
+  – Provide default configuration files (e.g., JSON, YAML, or XML) for parameters such as comparison tolerance, default export directory, and UI themes.
+  – Allow advanced users to modify these configurations to tailor the tool’s behavior.
+  – Ensure configuration changes take effect (either immediately or upon restart, as appropriate).
+
+──────────────────────────────
 3. Non-Functional Requirements
 
-A. Usability  
- • The user interface shall be intuitive and provide clear instructions for loading images, initiating comparisons, and exporting results.  
- • The system should provide error messages and help when images are not loaded correctly (e.g., incompatible sizes or unsupported file formats).
+3.1. Usability
+ • The UI should be intuitive, with clearly labeled controls.
+ • The application should be easy to navigate for users who are not necessarily tech-savvy.
 
-B. Performance  
- • The comparison engine should process standard screenshot sizes (e.g., Full HD) in real time or near-real time.  
- • The application should remain responsive during processing, employing progress indicators if necessary.
+3.2. Performance
+ • The comparison operation should complete in a reasonable time for typical image sizes (e.g., resolution up to 1920×1080).
+ • The application should handle images without significant memory overhead or slowdown.
 
-C. Portability and Platform Considerations  
- • The application should be built as a desktop application on supported platforms (specify platforms such as Windows, macOS, Linux).  
- • (Optional) If built as a web application, ensure the browser compatibility and security of file handling.
+3.3. Compatibility
+ • The solution should be designed as a cross-platform application (e.g., Windows, macOS, and Linux) unless a specific environment is targeted.
+ • Libraries and frameworks chosen should support the targeted platforms.
 
-D. Maintainability and Extensibility  
- • The codebase should be modular to allow for future enhancements (e.g., support for video previews of differences, more advanced comparison algorithms).  
- • Configuration files should be well-documented so that modifications can be made without deep knowledge of the code.
+3.4. Maintainability and Configurability
+ • The codebase should be modular to allow future extensions (e.g., batch processing, support for additional image formats).
+ • Include documentation for both user operations and developer maintenance.
 
-─────────────────────────────────────────────  
-4. User Interaction and Use Cases
+3.5. Error Handling
+ • Provide meaningful error messages and logs in cases such as:
+  – Input files missing or in a wrong format.
+  – Mismatched image dimensions (if the tool does not auto-resize).
+  – Issues writing the diff image to the specified directory (e.g., permissions).
+ • Ensure that errors do not cause the application to crash unexpectedly.
 
-A. Typical User Flow  
- 1. The user launches the application.  
- 2. The user uses the GUI to select two images (either via file selection dialog or drag-and-drop).  
- 3. The application validates the images and displays them side by side (if applicable).  
- 4. The user initiates the comparison.  
- 5. The application processes the images, highlights differences in a new diff view, and displays the result.  
- 6. The user selects an action to export the diff image to a specified directory.  
- 7. The application confirms the export or provides feedback if any error occurs.
+──────────────────────────────
+4. System Constraints and Considerations
 
-B. Edge Cases to Consider  
- • Inconsistent image sizes or resolutions.  
- • Images with minimal differences that may require an adjustable visual sensitivity.  
- • Failure to load or unsupported file types.
+• The application may leverage existing image processing libraries (e.g., OpenCV, ImageMagick) to perform low-level pixel comparisons.
+• Ensure that any third-party libraries used are compatible with the licensing requirements of the final product.
+• Determine a lightweight design if the target is desktop use, or consider future integration into a web-based tool if expansion is anticipated.
 
-─────────────────────────────────────────────  
-5. Documentation and Deliverables
+──────────────────────────────
+5. Use Cases
 
-• Provide user documentation that details how to load images, adjust settings (e.g., tolerance), and export diff images.  
-• Supply developer documentation, including details on configuration files and code structure for future maintenance.  
-• Include sample configuration files with comments for customization.
+• Use Case: Compare Two Screenshots
+ – Actor: End user (e.g., QA engineer, designer).
+ – Preconditions: User has two screenshots saved in a supported format.
+ – Main Success Scenario: User launches the app → selects two screenshots using the file dialog → the app displays the original images and a diff view → user exports the diff to a desired directory.
 
-─────────────────────────────────────────────  
-Conclusion
+• Use Case: Modify Comparison Sensitivity
+ – Actor: Advanced user.
+ – Preconditions: Application settings are available.
+ – Main Success Scenario: User adjusts the tolerance setting from the configuration file or UI → performs a new comparison with updated sensitivity.
 
-The refined requirements ensure that both end-user usability and technical robustness are addressed. The tool will not only compare two screenshots and highlight differences but also provide flexibility through configurable tolerance levels, support common image formats, and maintain a user-friendly GUI. This structured approach lays the foundation for clear development, testing, and future enhancement activities.
+──────────────────────────────
+6. Traceability and Future Expansion
+
+• This first version focuses on pixel-level differences. Future versions might consider higher-level changes (e.g., UI differences, layout changes) once the core functionalities are stable.
+• Log requirements with versioning to track changes and incorporate user feedback in subsequent releases.
+
+──────────────────────────────
+Summary
+
+The refined requirements now clearly delineate the inputs, processing, and outputs of the tool and include details on user interaction, configuration management, error handling, and performance expectations. This sets the stage for detailed specification, design, and later implementation – ensuring that all stakeholders have a shared and testable understanding of what the application should do.

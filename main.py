@@ -78,7 +78,7 @@ def main():
     code_gen_agent = CodeGenerationAgent(llm_reasoner, github_manager)
     architecture_path = os.path.join(outputs_dir, 'refined_goals.txt')
     specifications_path = os.path.join(outputs_dir, 'refined_environment.txt')
-    codebase = code_gen_agent.generate_codebase(architecture_path, specifications_path, outputs_dir)
+    codebase = code_gen_agent.generate_codebase(architecture_path, specifications_path, outputs_dir, inputs_dir)
     #print("Generated Codebase:", codebase)
     save_output(os.path.join(outputs_dir, 'generated_codebase.txt'), codebase)
 

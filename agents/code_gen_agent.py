@@ -7,7 +7,7 @@ class CodeGenerationAgent:
         self.llm = llm_reasoner
         self.github = github_manager
 
-    def generate_codebase(self, architecture_file, specifications_file, outputs_dir):
+    def generate_codebase(self, architecture_file, specifications_file, outputs_dir, inputs_dir):
         # Read file locally
         with open(architecture_file, 'r', encoding='utf-8') as f:
             architecture = f.read()
@@ -55,7 +55,7 @@ class CodeGenerationAgent:
 
         file_path = os.path.join(outputs_dir, 'generated_codebase.zip')
 
-        codebase = save_codebase_as_zip(txt_path, file_path)
+        codebase = save_codebase_as_zip(txt_path, file_path, inputs_dir)
 
         commit_message = "Generated Codebase"
         
@@ -73,7 +73,7 @@ class CodeGenerationAgent:
         return codebase
 
 
-def save_codebase_as_zip(codebase_json_path, zip_path):
+def save_codebase_as_zip(codebase_json_path, zip_path, inputs_dir):
     # Lade das JSON aus der Datei
     with open(codebase_json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -93,6 +93,15 @@ def save_codebase_as_zip(codebase_json_path, zip_path):
             if isinstance(content, list):
                 content = "\n".join(content)
             zipf.writestr(filename, content)
+
+        # Füge extra input-Dateien hinzu, falls vorhanden
+        for extra_file in ["goals.txt", "environment.txt"]:
+            file_path = os.path.join(inputs_dir, extra_file)
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as ef:
+                    content = ef.read()
+                    zipf.writestr(os.path.join("inputs", extra_file), content)
+                # Im ZIP unter dem Ordner "inputs" ablegen
 
     # ZIP-Datei als Bytes zurückgeben
     with open(zip_path, 'rb') as f:

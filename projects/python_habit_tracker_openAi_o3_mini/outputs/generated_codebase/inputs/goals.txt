@@ -1,0 +1,8 @@
+Build a habit tracking application to monitor and maintain daily or weekly habits.
+The result should be a functional application with a UI, so if necessary, create required config files.
+Features:
+- Add new habits with goals and schedules
+- Mark habits as completed for each day
+- Store all data in a SQLite database
+- Visualize progress using charts
+- Export habit data as CSV files
