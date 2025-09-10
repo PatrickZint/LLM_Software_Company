@@ -1,9 +1,0 @@
-<changelist name="Uncommitted_changes_before_Update_at_27_08_2025_11_16_[Changes]" date="1756286215465" recycled="false" toDelete="true">
-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_27_08_2025_11_16_[Changes]/shelved.patch" />
-  <option name="DESCRIPTION" value="Uncommitted changes before Update at 27.08.2025 11:16 [Changes]" />
-  <binary>
-    <option name="BEFORE_PATH" value="outputs/generated_codebase.zip" />
-    <option name="AFTER_PATH" value="outputs/generated_codebase.zip" />
-    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_27_08_2025_11_16_[Changes]/generated_codebase.zip" />
-  </binary>
-</changelist>
