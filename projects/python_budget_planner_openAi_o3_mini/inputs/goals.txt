@@ -1,7 +1,0 @@
-Develop a personal budget planner that tracks income and expenses and generates summaries.
-The result should be a functional application with, so if necessary, create required config files.
-Features:
-- Add, edit, and delete transactions
-- Categorize income and expenses
-- Generate monthly and yearly financial summaries
-- Display simple bar or pie charts for spending analysis
