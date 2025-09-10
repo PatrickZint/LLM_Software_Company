@@ -1,0 +1,7 @@
+Develop an automated file organizer that sorts files into folders based on type or creation date.
+The result should be a functional application with a UI, so if necessary, create required config files.
+Features:
+- Monitor a specified directory for new files
+- Move files into organized folders based on rules
+- Store logs of file movements in a database
+- Export file organization reports as CSV

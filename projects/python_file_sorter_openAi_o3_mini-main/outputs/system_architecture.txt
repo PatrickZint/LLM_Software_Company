@@ -1,188 +1,164 @@
-Below is a high-level system architecture that meets the specifications. The design is organized into several decoupled layers and modules, allowing for ease of testing, maintenance, and future extensibility.
+Below is a high-level system architecture that meets the provided specifications. This design breaks the application into modular components, defines interactions between layers, and maps each component to a recommended technology or library. The architecture follows a layered, modular, and event-driven approach to ensure responsiveness, scalability, and ease of future extension.
 
-─────────────────────────────────────────────
+──────────────────────────────────────────────  
+1. OVERALL ARCHITECTURE  
+──────────────────────────────────────────────  
+The architecture is organized into three primary layers:
 
-1. Architectural Overview
+A. Presentation Layer (GUI)  
+ • Implements the user-facing interface (configuration, monitoring, control, and report export).  
+ • Employs an MVC (Model–View–Controller) or similar pattern to decouple UI concerns from core logic.  
 
-The application adopts a modular, layered architecture separating responsibilities into distinct components. The primary layers are:
+B. Business Logic Layer  
+ • Centralized services for file monitoring, sorting, and logging.  
+ • Implements rule evaluation (file type, creation date) and orchestrates file operations reliably (atomic moves & error handling).  
+ • Manages asynchronous and concurrent processing (background threads, event handling).  
 
-• User Interface (Presentation Layer)  
-• Business Logic (Application Layer)  
-• Infrastructure Services (File System, Monitoring, and Logging)  
-• Persistence (Configuration and Database)
+C. Data Access Layer  
+ • Handles all interactions with the SQLite3 database and external JSON/YAML configuration files.  
+ • Provides APIs for logging operations and for saving/loading configuration settings.
 
-The design leverages common design patterns such as Observer (for directory monitoring) and Command (for executing file movements) to improve modularity.
+──────────────────────────────────────────────  
+2. COMPONENT DESIGN  
+──────────────────────────────────────────────  
+Below is a breakdown of key components and their responsibilities:
 
-─────────────────────────────────────────────
+A. File Monitoring Component  
+ • Monitors one or more user-specified directories.  
+ • Utilizes a file system monitoring library (e.g., watchdog) that abstracts OS-specific APIs (inotify for Linux, ReadDirectoryChangesW for Windows).  
+ • Supports fallback polling mode if advanced notification APIs are unavailable.  
+ • Runs on a dedicated background thread or uses asynchronous loops to continuously detect creation/modification events.  
+ • Reports file events to the File Processing Service.
 
-2. Component Design
+B. File Processing & Sorting Service  
+ • Receives file events from the monitoring component.  
+ • Evaluates applicable sorting rules (by file extension or creation date) based on current configuration.  
+ • Validates that destination directories exist (or creates them dynamically) and moves files using atomic operations (using os and shutil modules).  
+ • Ensures integrity by handling any exceptions and reverting partial changes if errors occur.
 
-A. User Interface (GUI Module)
+C. Logging Service  
+ • Captures details of every file movement, including source, destination, timestamp, and applied rule.  
+ • Stores log data into the SQLite3 database using parameterized queries and transactions to handle concurrency.  
+ • Exposes querying interfaces for report generation and debugging.
+ • Provides additional logging of errors and anomalous events as either separate logs or within the same database (using severity markers).
 
- • Functionality:  
-  – Provides an intuitive, cross-platform graphical interface (using PyQt/PySide, Tkinter, or even Electron with Python integration)  
-  – Allows users to configure monitored directories, define or modify organization rules, trigger dry-run operations, view real-time notifications, filter logs, and export CSV reports
+D. CSV Report Export Module  
+ • Provides functionality to generate CSV files from logged data.  
+ • Accepts filter options (date ranges, file type/sorting rule filters) via the UI.  
+ • Reads from the SQLite database and writes CSV reports with appropriate header rows and proper data escaping.
 
- • Key Responsibilities:  
-  – Interacts asynchronously with background services to ensure responsiveness  
-  – Presents configuration options and status updates (progress, errors, success notifications)  
-  – Provides an administration panel for configuration updates that immediately affect operational parameters or clearly indicate when a restart is required  
+E. Configuration Manager  
+ • Loads and writes settings stored in user-friendly external files (JSON or YAML).  
+ • Manages monitored directory settings, sorting rule definitions, and logging preferences.  
+ • Notifies the Business Logic layer immediately when configuration changes occur so that rule updates take effect instantly.
 
- • Technology:  
-  – PyQt/PySide for native look-and-feel on Windows, macOS, and Linux (or alternative frameworks like Tkinter/Electron)
+F. GUI / Presentation Component  
+ • Implements interactive screens for:
+  – Configuring directories, sorting rules, and logging settings  
+  – Monitoring real-time system status (file events, recent operations, error notifications)  
+  – Displaying and filtering logs  
+  – Manually triggering organization or CSV exports  
+ • Provides notifications (pop-ups or status messages) for errors and system events.
+ • Uses a framework that supports cross-platform interfaces and ease-of-use.
 
-B. Configuration Manager
+──────────────────────────────────────────────  
+3. TECHNOLOGY STACK SELECTION  
+──────────────────────────────────────────────  
+Below is the recommended technology stack for each aspect of the application:
 
- • Functionality:  
-  – Loads and validates configuration files (supporting JSON, YAML, or XML formats)  
-  – Synchronizes configuration data between file-based storage and runtime in-memory settings  
-  – Monitors changes (from either GUI updates or direct file edits) and applies them either immediately or after restart as defined by the system’s policies
+• Programming Language:  
+ – Python 3.10 or later, ensuring modern language features and better async support.
 
- • Key Responsibilities:  
-  – Provide APIs to read, update, and persist configurations  
-  – Validate updated settings to prevent misconfiguration  
-  – Generate default configurations if missing
+• GUI Framework (Presentation Layer):  
+ – PyQt or PySide2/6 (preferred for rich, native cross-platform look and feel)  
+ – Alternatively, Tkinter could be used for a simpler UI if needed.
 
- • Technology:  
-  – Standard Python libraries (json, xml.etree, PyYAML) for parsing  
-  – Integration with GUI settings module
+• File System Monitoring:  
+ – watchdog Python library which abstracts across Linux, macOS, and Windows.  
+ – Custom fallback polling mechanism if advanced OS monitoring is not available.
 
-C. Directory Monitoring & File Change Detector
+• File Operations:  
+ – Python’s built-in os and shutil modules, ensuring cross-platform compatibility and reliable file manipulation.
 
- • Functionality:  
-  – Monitors user-specified directories in real time  
-  – Detects file events such as creation or updates using either OS notification APIs (via watchdog library) or a configurable polling mechanism (e.g., every 5 seconds)
+• Database (Data Access Layer):  
+ – SQLite3 (embedded database)  
+ – Use Python’s sqlite3 module (with careful transaction handling and potential connection pooling, if necessary).
 
- • Key Responsibilities:  
-  – Validate directory accessibility  
-  – Emit events (via an Observer pattern) to trigger file organization rules
+• Configuration Management:  
+ – JSON or YAML configuration files  
+ – Use Python’s json module or an external library such as PyYAML for YAML support.
 
- • Technology:  
-  – watchdog Python library for real-time notifications  
-  – Threading or asyncio for non-blocking monitoring
+• Concurrency/Asynchronous Processing:  
+ – Python’s threading module for multi-threaded file monitoring and database operations or  
+ – Asyncio library for asynchronous processing, if the design evolves to require broader async patterns.
 
-D. Rule Engine
-
- • Functionality:  
-  – Applies a series of pluggable and modular file organization rules (by file type, creation date, etc.)  
-  – Supports customizable parameters such as folder naming conventions and conflict resolution strategies  
-  – Allows dynamic reordering, enable/disable, and customization of rules via the GUI
-
- • Key Responsibilities:  
-  – Define rule classes implementing a common interface (Command Pattern) to process file events  
-  – Manage rule priority and order as determined by user configuration  
-  – Enable “dry-run” operations where movements are simulated without impacting the file system
-
- • Technology:  
-  – Pure Python object-oriented design  
-  – Clear API boundaries for rule plug-ins to simplify future enhancements
-
-E. File Movement and Exception Handling Module
-
- • Functionality:  
-  – Executes the actual moving/renaming of files based on rule outcomes  
-  – Handles issues like file locks, permission errors, or I/O exceptions  
-  – Supports conflict resolution policies (e.g., renaming files with a unique identifier or skipping)
-
- • Key Responsibilities:  
-  – Act as a transaction-like service that can perform rollbacks or retries if a file operation fails  
-  – Report operation status back to the GUI and logging modules  
-  – Integrate with logging to record every attempted file operation
-
- • Technology:  
-  – Python’s os and shutil modules for file operations  
-  – Robust error handling using Python exception handling and logging patterns
-
-F. Logging and Reporting Module
-
- • Functionality:  
-  – Records all file operations along with metadata (timestamp, source/destination, rule applied)  
-  – Supports querying and filtering logs, and exporting reports in CSV format
-
- • Key Responsibilities:  
-  – Persist logs in an embedded SQLite3 database with a schema designed for high-frequency, lightweight writes  
-  – Provide an abstraction layer for querying historical data and linking log events with rule operations  
-  – Integrate with the GUI to enable real-time status updates and report generation
-
- • Technology:  
-  – Python’s built-in sqlite3 module  
-  – Standard logging module for structured error reporting
-
-G. Service Mode and Deployment Manager
-
- • Functionality:  
-  – Supports running the file organizer in daemon/background mode even when the GUI is closed  
-  – Manages resource usage, error logging in a headless environment, and facilitates containerized deployment via Docker if needed
-
- • Key Responsibilities:  
-  – Provide a startup routine that initializes all modules in the correct sequence  
-  – Monitor service health and restart components in case of transient failures based on configured policies  
-  – Document OS-specific installation details
-
- • Technology:  
-  – Python standard libraries for process/thread management  
-  – Docker for containerization, if container deployment is desired
-
-─────────────────────────────────────────────
-
-3. Technology Stack Summary
-
-• Language and Runtime:  
- – Python 3.8+ (ensuring compatibility with introduced standard modules and libraries)
-
-• File System & Monitoring:  
- – os and shutil (for file operations)  
- – watchdog (for real-time directory monitoring); fallback to custom polling logic as necessary
-
-• GUI Framework:  
- – PyQt5 or PySide2 are preferred for a cross-platform, native feel  
- – Alternatively, Tkinter for simpler UIs or Electron for a web-based GUI with Python back-end integration
-
-• Database:  
- – SQLite3 (embedded logging and persistence of file operation records)  
- – Configurable schema designed to handle high log write volume
-
-• Configuration Parsing:  
- – json (natively in Python)  
- – PyYAML for YAML if chosen  
- – ElementTree or similar libraries for XML configurations
-
-• Concurrency and Asynchronous Operations:  
- – Python threading or asyncio to offload monitoring and file movement processing away from the main GUI thread
+• Logging:  
+ – Python’s standard logging module to manage error logs, operational logs, and debugging outputs.  
+ – Configure logging handlers to write to both console and a dedicated error log file (or within SQLite in a separate table).
 
 • Packaging and Deployment:  
- – PyInstaller or similar tools for creating stand-alone executables  
- – Docker for container-based deployment (if applicable)
+ – PyInstaller to create standalone executables across platforms.  
+ – Alternatively, Docker containers can be used for consistent environment deployments (particularly in Linux or containerized environments).
 
-─────────────────────────────────────────────
+──────────────────────────────────────────────  
+4. CONCURRENCY & ASYNCHRONOUS DESIGN  
+──────────────────────────────────────────────  
+• The file monitoring component runs in its own background thread or within an asynchronous event loop, ensuring that the GUI remains responsive.  
+• File processing (sorting/moving) executes concurrently, with careful locking and exception handling to prevent race conditions.  
+• Database write operations leverage transactions and parameterized queries to mitigate SQLite’s concurrency limitations.  
+• The configuration manager can signal changes to the business logic layer dynamically, ensuring that rules are applied immediately.
 
-4. Interaction Flow (High-Level Sequence)
+──────────────────────────────────────────────  
+5. DEPLOYMENT & EXTENSIBILITY  
+──────────────────────────────────────────────  
+• The installer script/package will check for Python 3.10+, required libraries (watchdog, PyQt/Tkinter, PyYAML if needed), and the presence of SQLite.  
+• The modular design (separating monitoring, file operations, logging, and configuration) allows for easy extension:
+ – New sorting rules can be added using plugin-like architecture.
+ – Alternative logging/storage providers can be integrated with minimal changes.
+ – The UI can be updated independently of core business logic.
+• Comprehensive documentation (user manual, developer documentation, inline comments) is maintained to ease future enhancements.
 
-1. Initialization:  
- a. On startup, the Configuration Manager loads the configuration file (or generates defaults if missing).  
- b. The Logging Module initializes the SQLite database.  
- c. The GUI module is launched, displaying current settings and the status dashboard.
+──────────────────────────────────────────────  
+6. SUMMARY DIAGRAM (Conceptual)  
+──────────────────────────────────────────────  
+         +------------------------------------------+
+         |            Presentation (GUI)            |
+         |   (PyQt / Tkinter – MVC Controller)       |
+         +----------------–+-------------------------+
+                          |
+                          v
+         +----------------–+-------------------------+
+         |           Business Logic Layer           |
+         |   ┌───────────────┐   ┌─────────────────┐  |
+         |   | File Monitor  |   | Sorting Service |  |
+         |   | (watchdog)    |   | & Processing    |  |
+         |   └───────┬───────┘   └─┬──────────────┘  |
+         |           │               │              |
+         |           v               v              |
+         |   ┌────────────────────────────┐         |
+         |   |       Logging Service      |         |
+         |   └────────────────────────────┘         |
+         +----------------–+-------------------------+
+                          |
+                          v
+         +----------------–+-------------------------+
+         |          Data Access Layer               |
+         |   ┌───────────────┐  ┌─────────────────┐   |
+         |   |  SQLite3 DB   |  | Configuration    |   |
+         |   | (File Movements,|  | Files (JSON/YAML)|   |
+         |   |  Error Logs)   |  └─────────────────┘   |
+         |   └───────────────┘                        |
+         +------------------------------------------+
 
-2. Monitoring Phase:  
- a. The Directory Monitoring module begins watching configured directories via watchdog (or polling).  
- b. Detected file events are published to the system using an Observer pattern.
+──────────────────────────────────────────────  
+7. CONCLUSION  
+──────────────────────────────────────────────  
+This high-level architecture ensures:
 
-3. Rule Execution:  
- a. The Rule Engine receives file events and sequentially applies active rules based on user-defined order.  
- b. The File Movement module executes the rule, either in normal or dry-run mode.
+ – Clear separation of concerns via a layered design (Presentation, Business Logic, Data Access).  
+ – Responsiveness by leveraging background threading or asynchronous operations for file monitoring and file processing.  
+ – Reliability through proper error handling, logging, and robust file move operations.  
+ – Extensibility by keeping configuration, sorting, and reporting modules loosely coupled and easily replaceable.  
+ – Cross-platform support by using Python’s standard libraries and popular third-party libraries (watchdog and PyQt/Tkinter).
 
-4. Logging and Reporting:  
- a. Every file operation (successful or failed) is logged in SQLite.  
- b. The Reporting module enables users to filter and export logs as CSV via the GUI.
-
-5. User Interaction:  
- a. The GUI displays notifications, error messages, and progress indicators.  
- b. Users may adjust configurations in real time, with changes dispatched to the Configuration Manager.
-
-─────────────────────────────────────────────
-
-5. Summary
-
-This high-level architecture clearly separates the concerns across interface, business logic, file system services, and persistence. By using Python with its extensive standard libraries alongside select third-party modules (e.g., watchdog, PyQt/PySide), the system aligns well with the requirements for cross-platform compatibility, performance, and extensibility. The modular design also ensures that new functionality (such as additional file rules) or future migration (e.g., to a more robust database) can be integrated with minimal rework.
-
-This blueprint lays a strong foundation for development, testing (unit/integration tests for each component), and eventual deployment in various environments while addressing both the functional and non-functional requirements specified.
+This blueprint lays the foundation for phased implementation and testing, aligning with the performance targets, configurability, and scalability mentioned in the system specifications.

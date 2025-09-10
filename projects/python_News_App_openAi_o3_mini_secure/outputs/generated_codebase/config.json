@@ -1,4 +1,7 @@
+// Configuration file for the news reader application
 {
-    "endpoint": "https://newsapi.org/v2/top-headlines?country=us",
-    "api_key": "3d26120197bf4bc6b99a808842ae56d5"
+  "api_endpoint": "https://newsapi.org/v2/top-headlines",
+  "api_key": "3d26120197bf4bc6b99a808842ae56d5",
+  "refresh_interval": 15,
+  "country": "us"
 }

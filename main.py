@@ -25,7 +25,7 @@ def create_input_file(filepath, placeholder):
 
 def main():
     # Define project structure
-    project_name = 'python_file_sorter_openAi_o3_mini-main'
+    project_name = 'python_News_App_openAi_o3_mini_secure'
     base_dir = os.path.join('projects', project_name)
     inputs_dir = os.path.join(base_dir, 'inputs')
     outputs_dir = os.path.join(base_dir, 'outputs')

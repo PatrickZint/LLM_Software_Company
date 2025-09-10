@@ -1,158 +1,208 @@
-Below is a detailed system specification document that consolidates the refined goals, functional and non-functional requirements, and environment observations into a blueprint for designing, implementing, and validating the automated file organizer application.
+Below is a comprehensive set of system specifications based on the refined goals and environment profile. This document defines the functional and non-functional requirements, as well as system design recommendations for the automated file organizer application.
 
 ──────────────────────────────
-1. Overview
+1. OVERVIEW
 
-Objective:
-• Develop an automated file organizer application featuring a user-friendly graphical interface that continuously monitors user-specified directories, applies customizable file organization rules (by file type or creation date), moves files accordingly, and logs all operations into a persistent database.  
-• The application must support report generation in CSV format and allow configuration through both the UI and configuration files (JSON, YAML, or XML).  
-• It is to be built using Python (minimum version 3.8), with standard modules (os, shutil) and SQLite3 for embedded logging. Optionally, a cross-platform framework (e.g., Qt or Electron) can be used for the GUI.
+1.1. Purpose  
+ This application is designed to automatically monitor one or more user-specified directories, sort new or modified files into folders (based on file type or creation date), log every file movement into a persistent SQLite database, and allow users to export log reports as CSV files. A friendly, intuitive graphical interface (GUI) will be provided for configuration, monitoring, and control.
 
-──────────────────────────────
-2. Functional Requirements
-
-A. Directory Monitoring & File Detection  
- 1. Directory Configuration  
-  • The user can specify one or more directories via the GUI and/or configuration file.  
-  • Each monitored directory should be validated to confirm accessibility.  
- 2. Continuous Monitoring  
-  • The application continuously tracks the specified directories for new or modified files.  
-  • Real-time detection is preferred; however, a configurable polling interval (e.g., every 5 seconds) must be available.  
- 3. File Change Detection  
-  • The system detects file events (creation, updates) reliably, using OS notifications where available or a polling mechanism if necessary.
-
-B. File Organization Rules  
- 1. Supported Organization Types  
-  a. By File Type  
-   • Files are routed into target directories based on file extension and/or MIME type.  
-  b. By Creation Date  
-   • Files are automatically moved into date-stamped subdirectories (e.g., Year/Month/Day or Year-Month formats).  
- 2. Rule Engine  
-  • Implement a modular, pluggable rule engine that applies one or more rules in a user-defined order.  
-  • Each rule must include parameters for file type/dates, target folder naming conventions, and conflict resolution.  
- 3. Customization Interface  
-  • The GUI must provide an interface for users to add, update, enable/disable, and reorder rules.  
-  • Users can specify custom folder naming patterns and set policies (e.g., append a unique identifier if a file with the same name exists).
-
-C. File Movement  
- 1. Rule Application and Movement  
-  • Upon file detection, the system determines the applicable organizational rule(s) and relocates the file accordingly.  
- 2. Exception and Conflict Handling  
-  • The system must gracefully handle exceptions, including file permission errors, file locks, or I/O issues.  
-  • The UI must notify the user of failures and provide an option to retry the operation.  
- 3. Dry Run Mode  
-  • Allow a “preview” or dry run mode so users can simulate file movements, review changes, and then confirm before actual file movements occur.
-
-D. Logging and Reporting  
- 1. Operation Logging  
-  • Every file movement is recorded in the database with a timestamp, original path, destination path, and the rule applied.  
- 2. Database and Persistency  
-  • The system uses an embedded SQLite database to store logs locally, with a defined schema for querying historical operations.  
- 3. Export and Reporting  
-  • The UI must provide functionality to filter logs (by date range, file type, etc.) and export reports in CSV format.
-
-E. Configuration & Setup  
- 1. Configuration Management  
-  • The application must create or use an existing configuration file (JSON, YAML, or XML) defining monitored directories, file organization rules, database connection settings, and reporting options.  
- 2. Dual Configuration Interfaces  
-  • Users can update configurations via the GUI or directly by editing the configuration file; all changes must be validated.  
- 3. Immediate or Deferred Application  
-  • Some configuration changes (e.g., folder paths, rules) should take immediate effect; others may require a restart with a clear notice provided in the UI.
+1.2. Scope  
+ • Monitor and process file system events (file creation, modification) in designated directories.  
+ • Sort files into organized folder structures using configurable rules.  
+ • Log each file operation with metadata (original path, new destination, timestamp, rule applied).  
+ • Provide CSV export functionality with configurable filters.  
+ • Enable users to adjust monitored directories, modify sorting rules, and view logs via a GUI.  
+ • Use Python 3.10+ and SQLite3, with file operations covered by the standard os and shutil libraries.
 
 ──────────────────────────────
-3. Non-Functional Requirements
+2. FUNCTIONAL REQUIREMENTS
 
-A. Usability  
- 1. Intuitive GUI  
-  • The user interface must be simple and intuitive for non-expert users, with clearly labeled menus, tooltips, and contextual help.  
- 2. Immediate Feedback  
-  • Users must receive real-time operation feedback through notifications, visual status indicators (e.g., “processing”, “success”, “error”), and progress indicators if processing large batches of files.
+2.1. Directory Monitoring  
+ • The application shall let the user define one or more directories for monitoring through the GUI as well as via external configuration files (JSON or YAML).  
+ • It shall continuously monitor these directories for the creation or modification of files.  
+  – Use OS-level file monitoring APIs (e.g., inotify on Linux, ReadDirectoryChangesW on Windows) or reliable polling mechanisms if necessary.  
+ • In cases of temporary disconnections or access errors (e.g., permission issues), the application shall:
+  – Log these events in an error log.
+  – Notify the user via the UI with appropriate error messages or alerts.
+ • The monitoring service must be capable of handling directories with a large number of files without significant performance degradation.
 
-B. Performance  
- 1. Low Latency and Responsiveness  
-  • The directory monitoring component is designed with measurable performance targets—for example, a response time under 500 milliseconds for detected file events under normal load.  
- 2. System Resource Utilization  
-  • The application should be resource-efficient, aiming for CPU utilization below 70% and memory usage under 500 MB during standard operations.  
- 3. Scalability  
-  • The system must correctly scale to handle a high volume of file events (e.g., up to 100 events per minute) without significant degradation.
+2.2. File Sorting and Organization  
+ • The system shall automatically move newly detected files to designated folders as defined by sorting rules.
+ • Sorting Rules (configurable via GUI and external configuration):
+  – File type: Detect by extensions (e.g., .jpg, .pdf) and move files into type-specific folders.
+  – Creation date: Group files by date (year/month/day) within the target directory.
+ • Users shall be able to add, remove, or modify sorting rules. The system should immediately adopt rule changes without needing to restart the application.
+ • Before moving files, ensure:
+  – The destination folder exists, or create it dynamically in a collision-free and consistent manner.
+  – File integrity is maintained (no partial transfers, and use atomic operations where possible).
 
-C. Reliability & Error Handling  
- 1. Data Integrity  
-  • Ensure that file operations (e.g., moves) are executed reliably with no data corruption or loss, using rollback or retry strategies in case of partial failures.  
- 2. Robust Error Logging  
-  • All exceptions, permission errors, or conflicts must be logged, and corresponding error codes/messages should be generated.  
- 3. Continuous Operation  
-  • The system should gracefully recover from errors without requiring a full shutdown, and it should support running in a background (daemon) mode.
+2.3. Logging File Movements  
+ • Every file movement operation must be logged with the following attributes:
+  – Original file path
+  – Destination folder/path
+  – Timestamp of the operation
+  – The sorting rule applied (e.g., “File Type: jpg”, “Creation Date: 2023/10/05”)
+ • Log entries will be stored persistently in an SQLite3 database.
+  – Design the database schema so that it can be easily extended in the future (e.g., to include file size, user information, etc.).
+ • All logging operations should correctly handle concurrent access patterns given SQLite’s limitations (using appropriate transaction management).
 
-D. Extensibility  
- 1. Future-Proofing the Rule Engine  
-  • The design must allow additional file organization rules (e.g., sorting by file size, modification date, metadata) to be integrated without major refactoring.  
- 2. Configurability  
-  • Using human-readable configuration formats (JSON, YAML, or XML) ensures that future enhancements and integrations can be implemented with minimal disruptions.
+2.4. CSV Report Export  
+ • The application shall provide a feature to export log data as CSV files.
+ • Users must have options to filter the logs before export. Filtering options include:
+  – Date range filters (start date and end date).
+  – Sorting rule/type filters.
+ • The CSV file shall follow a defined schema that matches the log database fields. The file should be formatted so that it can be imported easily into spreadsheet applications (e.g., Excel, LibreOffice).
 
-E. Security  
- 1. Data Exposure Prevention  
-  • Ensure that file operations and the logging process do not expose sensitive data. Validate all file paths to prevent directory traversal and other vulnerabilities.  
- 2. Access Controls  
-  • If administrative operations are present (e.g., modifying configuration files), enforce appropriate user access controls.  
- 3. Validation  
-  • All user inputs (whether via the GUI or config file) should be validated to prevent injection attacks or erroneous configurations.
-
-──────────────────────────────
-4. System Design Recommendations
-
-A. Architectural Overview  
- • Consider a modular, layered architecture that decouples the GUI, business logic (including the rule engine), monitoring services, and logging/reporting modules.  
- • Use design patterns such as Observer/Listener for directory monitoring and Command for rule execution to improve maintainability and extensibility.
-
-B. Technology Stack  
- 1. Python (minimum version 3.8)  
-  • Leverage standard libraries (os, shutil) for file operations.  
-  • Use additional modules (e.g., watchdog for real-time file monitoring, threading or asyncio for concurrency, and logging for structured error messages).
- 2. SQLite3  
-  • Use SQLite for storing logs; design an efficient schema to accommodate frequent writes and queries.  
-  • Document concurrency expectations; if necessary, plan for future migration to a more robust DB system under the scale-up scenario.
- 3. GUI Framework  
-  • For cross-platform compatibility, consider frameworks like PyQt/PySide, Tkinter, or Electron (with Python back-end integration).  
-  • The GUI should interact asynchronously with background services to avoid UI freezes during file operations.
-
-C. Service Modes and Deployment  
- 1. Background/Daemon Mode  
-  • Allow the file organizer to run as a background service or daemon even when the GUI is minimized or closed.  
-  • Ensure that the mode properly handles system resource management and logs errors, even in headless operation.
- 2. Deployment Environments  
-  • Clearly define the target operating systems (Windows, macOS, Linux) and account for OS-specific file system behaviors.  
-  • Provide a detailed installation and deployment guide, including instructions for containerized deployments (e.g., using Docker) if needed.
-
-D. Error Handling and Rollback Strategies  
- • Implement a robust error handling strategy in file movement modules. Consider using transaction-like processing for batch operations that can be rolled back in case of failures.  
- • Define strategies for conflict resolution (manual intervention via UI, automatic renaming, or skipping files) that are configurable by the user.
-
-E. Testing and Benchmarking  
- • Establish automated unit and integration tests to validate each module:
-  - Unit tests for directory monitoring, rule engine logic, file movements, and configuration parsing.
-  - Integration tests for the end-to-end process (including dry run mode, logging, error recovery, and CSV export).  
- • Incorporate performance testing (e.g., simulating high file event loads) to ensure the latency and throughput targets are met.  
- • Document performance assumptions regarding CPU, memory, and storage speeds for benchmarking purposes.
-
-F. Documentation  
- • Prepare comprehensive documentation covering:
-  - Installation guides  
-  - User manuals for rule configuration, usage of dry run mode, and report generation  
-  - Administrator guides detailing configuration file syntax, deployment configurations, and troubleshooting procedures.
+2.5. User Interface (UI)  
+ • Develop an intuitive and responsive GUI that supports:
+  – Configuration screens for setting monitored directories, sorting rules, and logging preferences.
+  – Real-time display of the system status (e.g., active monitoring, last file movement, error notifications).
+  – A log summary display with options to search, filter, or sort logged operations.
+  – Manual controls to trigger file organization or to generate and save CSV reports.
+  – Notifications (e.g., pop-up alerts) for errors such as file access issues, failed moves, or database write errors.
+ • All configuration changes made via the UI must be saved to external configuration files (JSON/YAML) to ensure persistence across sessions.
 
 ──────────────────────────────
-5. Acceptance Criteria
+3. NON-FUNCTIONAL REQUIREMENTS
 
-The system will be considered complete and acceptable when the following criteria are met:
-• A file added to any monitored directory is automatically processed, with its destination determined by the active rule(s), and subsequently moved.  
-• All file movements are reliably logged with the correct timestamp, source, destination, and associated rule details in the SQLite database.  
-• The GUI displays real-time notifications of operations, errors, and supports log filtering and CSV export of reports accurately.  
-• The configuration file is automatically generated if missing, validated on load, and any updates (via GUI or direct edit) take immediate effect or provide proper restart instructions.  
-• The application demonstrates robust error handling by gracefully notifying users about issues such as file lock, permissions, or other I/O errors without crashing.  
-• Performance tests confirm that the system responds to file events within 500 milliseconds and handles up to 100 file events per minute, while consuming acceptable CPU and memory resources.
+3.1. Performance and Scalability  
+ • Performance targets:
+  – Under typical load, 95% of all file system and database operations (e.g., file moves, database writes, and queries) should complete within 200 milliseconds.
+  – The system must efficiently handle directories containing large numbers of files.
+ • Concurrency:
+  – The design should minimize interference with normal directory usage by utilizing background threads or asynchronous routines for file monitoring and database operations.
+ • Regular performance testing must be conducted to validate operation latencies and to monitor resource usage under different scenarios.
+
+3.2. Configurability and Extensibility  
+ • All application configurations (monitored directories, sorting rules, logging preferences) shall be stored in human-readable external configuration files (e.g., JSON or YAML).  
+ • The architecture must be modular:
+  – Allow new sorting strategies or logging mechanisms to be integrated with minimal changes to the core logic.
+  – Use design patterns (e.g., plugin pattern for sorting rules) to facilitate future extensions.
+ • Clearly document configuration file syntax and permissible parameter values.
+
+3.3. Reliability and Error Handling  
+ • The application shall:
+  – Include robust error handling mechanisms for handling issues like file access conflicts, disk errors, or database write failures.
+  – Log errors and anomalies in a separate error log file or within the same SQLite database with high severity markers.
+  – Recover gracefully from temporary issues, such as lost directory connection, without requiring user intervention.
+ • Exceptions must be caught and detailed error messages should be provided both in logs and via the UI to aid in troubleshooting.
+
+3.4. Security  
+ • Ensure file operations align with the user’s permission settings:
+  – Verify read/write permissions before accessing or moving files.
+  – Handle any permission errors gracefully.
+ • Protect configuration files and the SQLite database:
+  – Consider file-system level permissions and possibly encryption if sensitive information is stored.
+  – The application configuration and log files should be inaccessible to unauthorized users.
+ • Ensure that any external libraries or dependencies are kept up-to-date with security patches.
 
 ──────────────────────────────
-Summary
+4. SYSTEM DESIGN RECOMMENDATIONS
 
-This detailed system specification defines the functional and non-functional requirements as well as the system design recommendations for the file organizer application. Adhering to these specifications will ensure that the application not only meets user expectations regarding file organization and reporting but also remains robust, secure, extensible, and well-documented. Each module—from directory monitoring to the rule engine and logging—should be developed with modularity and clear interfaces in mind, thereby facilitating testing, future enhancements, and cross-platform compatibility.
+4.1. Overall Architecture  
+ • Use a modular, layered architecture consisting of the following layers:
+  – Presentation Layer: GUI using a Python-compatible framework (e.g., PyQt, Tkinter) that communicates with the underlying business logic.
+  – Business Logic Layer: Core services for file monitoring, sorting, and logging.
+  – Data Access Layer: Responsible for database interactions with SQLite3 and managing configuration file I/O.
+ • Utilize a Model-View-Controller (MVC) or similar pattern to separate UI concerns from core logic.
+
+4.2. Concurrency and Asynchronous Processing  
+ • Use multithreading or asynchronous I/O to ensure that file monitoring, file moving, and reporting do not block the UI:
+  – File monitoring can run in a dedicated background thread or asynchronous loop.
+  – Database operations can be batched or queued to minimize blocking.
+ • Ensure that proper locking or transactional controls are in place to prevent race conditions, especially on file operations and database accesses.
+
+4.3. File Monitoring and Handling  
+ • Evaluate and select the appropriate file system monitoring technique:
+  – Leverage platform-specific APIs when available (for example, watchdog library in Python that abstracts these differences).
+  – Fall back to a reliable polling mechanism if necessary.
+ • Ensure that the moving operation is as atomic as possible:
+  – Use temporary file markers or backup copies where required.
+  – Cleanly handle failures by reverting changes if a move operation is interrupted.
+
+4.4. Database Schema Design  
+ • The SQLite database shall include (at minimum) the following table:
+  TABLE: FileMovements  
+   – id (primary key, auto-increment)
+   – original_path (TEXT)
+   – destination_path (TEXT)
+   – timestamp (DATETIME)
+   – sorting_rule (TEXT)
+   – Any additional metadata columns as needed for future enhancements (e.g., file size, file hash)
+ • Use parameterized queries and transactions to ensure data integrity and protect against SQL injection, even if the immediate risk is low in a desktop application.
+
+4.5. CSV Export Module  
+ • Design a CSV export utility that:
+  – Reads from the database and applies user-defined filters.
+  – Writes out CSV files following a strict schema that matches the FileMovements table.
+  – Includes headers and handles field escape/multi-line values properly.
+
+4.6. Deployment Considerations  
+ • Provide an installer that:
+  – Creates default configuration files if none exist.
+  – Checks for the presence of required Python runtime (3.10+), library dependencies (e.g., watchdog for file monitoring, if used), and SQLite3.
+  – Supports multiple operating systems without platform-specific side effects (consider packaging with PyInstaller or using Docker containers).
+ • Include a clear README and documentation that outlines installation prerequisites, user guide basics, and troubleshooting steps.
+
+──────────────────────────────
+5. PERFORMANCE & TECHNOLOGY STACK SPECIFICATIONS
+
+5.1. Performance Targets  
+ • 95% of critical operations (file moves, database writes, file system queries) should complete within 200 milliseconds under a defined “typical load.”  
+ • Define testing scenarios for both typical and peak loads, taking into consideration:
+  – The number of concurrent file operations.
+  – Maximum expected file volume in monitored directories.
+  – Benchmarking under simulated user actions (manual triggers via UI).
+
+5.2. Technology Stack  
+ • Programming Language: Python (version 3.10 or later).  
+ • Database: SQLite3 for managing logs and ensuring local persistence.
+  – Evaluate expected concurrent access and plan for performance optimizations (e.g., connection pooling, careful use of transactions).  
+ • File Operations: Utilize Python’s standard os and shutil modules for file manipulations, ensuring cross-platform compatibility.  
+ • GUI Framework: Select a mature Python GUI framework (such as PyQt or Tkinter) that meets usability and cross-platform demands.  
+ • Additional Libraries:
+  – Consider using a file system monitoring library (e.g., watchdog) to abstract platform differences.
+  – Use standard Python logging libraries to manage both operational and error logs.
+
+──────────────────────────────
+6. TESTING AND QUALITY ASSURANCE
+
+6.1. Testing Approach  
+ • Unit Testing:
+  – Test individual modules (file monitoring, sorting logic, logging, CSV export).
+ • Integration Testing:
+  – Validate end-to-end functionality from file detection through movement, logging, and CSV export.
+ • UI Testing:
+  – Ensure the GUI components behave as expected under normal use and error conditions.
+ • Performance Testing:
+  – Benchmark file and database operations under simulated loads.
+ • Edge/Failure Cases:
+  – Test scenarios including loss of file access, database write errors, permission errors, and unexpected directory changes.
+  – Ensure the system gracefully recovers from errors and provides useful feedback.
+
+6.2. Quality Assurance  
+ • Implement continuous integration (CI) pipelines that run automated tests on every change.  
+ • Use logging and monitoring within the application to capture runtime metrics for monitoring production performance.  
+ • Regularly review and update error handling strategies based on user feedback and observed failure scenarios.
+
+──────────────────────────────
+7. DOCUMENTATION AND SUPPORT
+
+7.1. User Documentation  
+ • Provide a comprehensive user manual covering:
+  – Installation and configuration steps.
+  – How to define monitored directories and customize sorting rules.
+  – Detailed instructions for CSV report generation.
+  – Troubleshooting common errors (e.g., permission issues, missing folders).
+
+7.2. Developer Documentation  
+ • Include inline code documentation and high-level design documents.
+ • Document the configuration file format and how to extend sorting rules or logging functionalities.
+ • Provide setup instructions for the development environment and guidelines for testing and deployment.
+
+──────────────────────────────
+8. CONCLUSION
+
+The system specifications detailed above transform the high-level objectives into actionable, measurable requirements and a robust system design strategy for an automated file organizer. The modular architecture, clear performance targets, optimization for reliability and security, and thorough testing approach together ensure that the final application will be efficient, scalable, and user-friendly. Further steps include finalizing use-case diagrams, detailed class/module designs, and a phased implementation plan with continuous feedback and testing.
+
+This document serves as the foundation for design and development, ensuring that all stakeholders have a shared understanding of the system requirements and architecture.

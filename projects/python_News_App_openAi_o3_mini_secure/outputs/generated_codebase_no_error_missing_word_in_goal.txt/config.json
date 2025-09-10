@@ -1,0 +1,4 @@
+{
+    "endpoint": "https://newsapi.org/v2/top-headlines?country=us",
+    "api_key": "3d26120197bf4bc6b99a808842ae56d5"
+}

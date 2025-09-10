@@ -1,93 +1,96 @@
-Below is an analysis and refinement of the initial goals and feature list for the proposed file organizer application. The aim is to clarify functional and non-functional requirements, identify any missing pieces, and make the goals testable and unambiguous.
+Below is an analysis and refinement of the initial goals and features. The goal is to transform the high-level description into a set of clear, actionable requirements.
 
 ──────────────────────────────
-1. High-Level Objective
+1. Overall Goal
 
-• Develop an automated file organizer application with a graphical user interface (GUI).  
-• The application monitors a user‐configured directory, applies file organization rules (by type or creation date), and performs file movements accordingly.  
-• It logs all operations to a persistent database and provides options to export reports (in CSV format).
+• The software shall be an automated file organizer that runs as a functional application with a user interface (UI).  
+• It shall monitor a configurable directory for new files and automatically sort them into folders based on either file type or creation date.  
+• In addition to moving files, it will maintain logs of file movements in a database and provide CSV export functionality for reports.
 
 ──────────────────────────────
 2. Functional Requirements
 
-A. Directory Monitoring & File Detection  
- 1. The application must allow a user to specify one or more directories to be monitored.  
- 2. It shall continuously monitor the specified directory (or directories) for new or modified files with minimal delay.  
- 3. It must detect changes in real time (or on a configurable polling interval).
+2.1. Directory Monitoring  
+ • The application shall allow the user to specify one (or more) directories to monitor.  
+ • It shall continuously observe the chosen directory for new files or file changes, using an appropriate OS-level file monitoring API or polling mechanism.  
+ • It shall handle temporary disconnections or errors in accessing the directory and alert the user via the UI.
 
-B. File Organization Rules  
- 1. The system should support at least two types of organization rules:  
-  a. Organization by File Type – Files are moved into folders based on file extension or MIME type.  
-  b. Organization by Creation Date – Files are sorted into subfolders (e.g., by year, month, or full date).  
- 2. A rule engine component is responsible for applying one or more rules in a configurable order.  
- 3. The UI should enable users to customize and enable/disable rules, including:  
-  a. Choosing which file types or date ranges trigger specific folder destinations.  
-  b. Defining folder naming conventions.  
-  c. Optionally specifying conflict resolution (e.g., if a file with the same name already exists).
+2.2. File Sorting and Organization  
+ • The system shall move detected files into organized folders automatically.  
+ • Sorting rules shall include, at a minimum:  
+  – File type (e.g., based on file extensions such as .jpg, .pdf)  
+  – File creation date (e.g., grouping files by year/month/day)  
+ • The sorting rules shall be configurable (see configuration section) so that the user can add, remove, or modify rules.  
+ • The application shall ensure that folder creation takes into account existing folders, avoiding duplicates or conflicts, and always preserve file integrity.
 
-C. File Movement  
- 1. Once a file is detected, the application must determine the applicable rule(s) and move the file to the appropriate target folder.  
- 2. The application should handle exceptions (e.g., permission issues, file locks) and notify users accordingly.  
- 3. It may require a “dry run” or preview mode where rules can be tested before performing operations.
+2.3. Logging File Movements  
+ • Every file movement shall be recorded with details including:  
+  – Original file path  
+  – Destination folder  
+  – Timestamp of movement  
+  – Applied sorting rule  
+ • The log entries shall be stored in a persistent database (for example, SQLite or another appropriate embedded database).  
+ • The database schema shall be designed to allow for future enhancements (e.g., additional metadata).
 
-D. Logging and Reporting  
- 1. Every file movement must be logged in a database with details including:  
-  a. Timestamp of the move  
-  b. Original file path  
-  c. Destination path  
-  d. Rule applied  
- 2. The system should provide a feature to export the logs or summaries as CSV files.  
- 3. The UI should allow users to view logs and generate reports based on filters (date ranges, file types, etc.).
+2.4. CSV Report Export  
+ • The application shall provide functionality to export logs as CSV reports.  
+ • The report generation shall include filtering options such as date range or sorting rule, as needed, to help users generate targeted reports.  
+ • The CSV files shall follow a defined schema, making it easy to import into spreadsheet applications.
 
-E. Configuration & Setup  
- 1. The application should either include or generate required configuration files (in JSON, YAML, or XML) that define:  
-  a. Monitored directories  
-  b. File organization rules and parameters  
-  c. Database connection settings (if an external DB is used)  
-  d. Export/reporting settings  
- 2. The configuration should be modifiable both through the UI and via direct file edits (with proper validation).
+2.5. User Interface (UI)  
+ • The application shall include an intuitive, user-friendly graphical interface.  
+ • UI features shall include:  
+  – Configuration screens for setting up monitored directories, sorting rules, and logging preferences.  
+  – Real-time display of monitoring status and log summaries.  
+  – Options to manually trigger file organization or report exports.  
+  – Notifications or error messages for file movement failures or system problems.  
+ • The UI shall be responsive and support basic operations without requiring the user to modify hidden configuration files.
 
 ──────────────────────────────
 3. Non-Functional Requirements
 
-A. Usability  
- 1. The GUI must be intuitive for users with basic technical knowledge.  
- 2. It should provide immediate feedback on operations (e.g., display success/failure messages).
+3.1. Performance and Scalability  
+ • The file monitoring mechanism should efficiently handle directories with a large number of files.  
+ • File organization tasks should run in a way that does not interfere with normal directory usage by the user or other applications.
 
-B. Performance  
- 1. The directory-monitoring component should have low latency and minimal system resource consumption.  
- 2. The application must handle potentially large numbers of files without significant performance degradation.
+3.2. Configurability and Extensibility  
+ • The application configuration (such as sorting rules, monitored directories, etc.) shall be stored in external configuration files (e.g., JSON or YAML files) so that advanced users can customize settings without altering the source code.  
+ • The architecture shall be modular, allowing for new sorting rules or logging mechanisms to be added in the future.
 
-C. Reliability & Error Handling  
- 1. The file mover should operate reliably without data loss or corruption.  
- 2. On failure (e.g., file in use or permission issues), errors must be logged and the user should be notified.  
- 3. The application must support rollback or re-try strategies in case of failed file operations.
+3.3. Reliability and Error Handling  
+ • The application shall include robust error-handling routines to manage scenarios such as file access conflicts, disk errors, or database write failures.  
+ • Any error or exception events shall be logged for maintenance and debugging purposes.
 
-D. Extensibility  
- 1. The design should allow for additional rules in the future (e.g., sorting by file size, modification date, metadata).  
- 2. The configuration file format should be chosen to facilitate easy modifications and updates.
-
-E. Security  
- 1. The application must ensure that moving files does not inadvertently expose sensitive data.  
- 2. There should be proper validations to prevent directory traversal or unauthorized file operations.
+3.4. Security  
+ • The application shall ensure that file operations (monitoring, moving, reading, writing) comply with user file permission settings.  
+ • The configuration files and database logs should be secured appropriately to prevent unauthorized access.
 
 ──────────────────────────────
-4. Implementation Considerations
+4. Additional Considerations
 
-• The UI can be built using a cross-platform framework (e.g., Electron, Qt) so that the application can run on multiple operating systems if required.  
-• A background service or daemon mode might be implemented to allow the organizer to run continuously, even when the UI is minimized or closed.  
-• A logging and reporting module should abstract interaction with the database (consider an embedded DB like SQLite if simplicity and local use are sufficient).
+4.1. Installation and Deployment  
+ • The application installer shall create the necessary configuration files (if absent) during installation, with default settings that the user can later modify.  
+ • The installer should detail prerequisites (e.g., runtime environments, database libraries).
+
+4.2. Documentation and Help  
+ • Comprehensive user documentation shall be provided that explains how to set up monitored directories, configure sorting rules, access logs, and export CSV reports.  
+ • In-application help or tutorials may guide first-time users.
+
+4.3. Testing and Quality Assurance  
+ • The application must be thoroughly tested to ensure that it accurately monitors directories, applies sorting rules correctly, handles errors gracefully, and generates correct log entries and CSV reports.  
+ • Unit tests, integration tests, and UI tests should be included in the test plan.
 
 ──────────────────────────────
-5. Acceptance Criteria
+5. Summary of Refined Functional Requirements
 
-• When a new file is added to the monitored directory, the application automatically moves it to the correct folder based on user-configured rules.  
-• The movement is logged in the database with all required details.  
-• Users can view the log information via the UI and export a CSV report accurately reflecting the logged operations.  
-• The configuration file is created (if not already present) and can be updated by the user with immediate effect (after validation or upon restart if required).  
-• The application gracefully handles errors and keeps the user informed without crashing.
+• Monitor specified directories and continuously check for new/modified files.  
+• Automatically move files to folders based on configurable rules (file type and/or creation date).  
+• Log all file movements with detailed metadata in a persistent database.  
+• Allow users to export customizable CSV reports of file organization activity.  
+• Provide a GUI to configure the application, display logs, and perform manual actions if needed.  
+• Utilize external configuration files for advanced settings, ensuring ease of deployment and customization.
 
 ──────────────────────────────
-Summary
+Conclusion
 
-By refining the overall goal into detailed functional and non-functional requirements, we now have a clearer blueprint for development. The system should not only automate file organization based on type and creation date but also provide transparency (through logs and reports) and flexibility through an interactive UI. This structure lays the groundwork for subsequent design, implementation, and testing phases.
+This refined set of requirements clarifies the goals, offers explicit functional and non-functional requirements, and outlines considerations for usability, security, and maintainability. The next steps would be to prioritize these requirements, create use-case diagrams, and detail the system architecture before moving to design and implementation.

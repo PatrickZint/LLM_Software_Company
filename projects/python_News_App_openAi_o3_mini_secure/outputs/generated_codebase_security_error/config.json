@@ -1,0 +1,9 @@
+{
+    "api_url": "https://newsapi.org/v2",
+    "endpoint": "/top-headlines",
+    "api_key": "gAAAAABlZJtY1q3-ENCRYPTED_EXAMPLE_API_KEY-123456789",
+    "encrypted": true,
+    "country": "us",
+    "log_level": "INFO",
+    "timeout": 5
+}
