@@ -1,0 +1,5 @@
+{
+    "database": "notes.db",
+    "theme": "light",
+    "export_path": "./exports"
+}

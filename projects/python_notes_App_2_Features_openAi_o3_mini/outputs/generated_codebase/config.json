@@ -1,0 +1,5 @@
+{
+  "database": "notes.db",
+  "app_name": "Note Taking App",
+  "window_size": "800x600"
+}
