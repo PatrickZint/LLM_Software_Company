@@ -1,117 +1,120 @@
-Below is a high-level system architecture for the note-taking application. This design leverages a layered (modular) approach that cleanly separates concerns and responsibilities. The architecture is divided into three main layers—Presentation, Business Logic, and Data Access/Persistence—with supporting infrastructure for deployment, testing, and configuration.
+Below is a high-level system architecture that addresses the functional and non-functional requirements outlined in the specification. This design divides the application into clear layers and modules, each with its responsibility, and includes a suggested technology stack to meet the project goals.
 
-────────────────────────────────────────
-1. High-Level Component Diagram Overview
-────────────────────────────────────────
-      ┌───────────────────────────────┐
-      │       Presentation UI         │
-      │   (Tkinter Windows & Forms)   │
-      └─────────────┬───────────────┘
-                    │
-      ┌─────────────▼───────────────┐
-      │      Business Logic         │
-      │ (Controllers, Validations,  │
-      │ Timestamp Management, etc.) │
-      └─────────────┬───────────────┘
-                    │
-      ┌─────────────▼───────────────┐
-      │    Data Access & Persistence│
-      │   (SQLite, ORM/Helpers,     │
-      │    DB Initialization/Migrations)  │
-      └───────────────────────────────┘
+─────────────────────────────  
+1. ARCHITECTURE OVERVIEW
 
-Additional supporting modules, such as configuration management, dependency management, and deployment scripts, wrap the overall system.
+The overall design follows an MVC-like (or layered separation of concerns) pattern:
 
-────────────────────────────────────────
-2. Component Detail and Design Description
-────────────────────────────────────────
+• Model (Data & Persistence)  
+ – Represents Notes as objects with attributes (id, title, content, timestamp, tags).  
+ – Manages storage through a persistence module that abstracts the underlying storage technology.
 
-A. Presentation Layer (UI):
-   • Technology: Python Tkinter
-   • Components:
-     - Main/List View:
-       • Displays a list or table of notes (Title and Creation Date).
-       • Navigation controls (e.g., selection, “Add Note” button).
-     - Detail View:
-       • Shows full note details including key metadata.
-       • Offers “Edit” and “Delete” controls with confirmation dialogs.
-     - Input Forms:
-       • Two separate forms for “Create Note” and “Edit Note.”
-       • Validates user input (non-empty title, character limits, required content).
-   • Considerations:
-     - Accessibility: Keyboard navigation, clear labels, appropriate font sizes and color contrast.
-     - Responsiveness and feedback: Instant visual cues (success/error messages).
+• View (User Interface)  
+ – Implements the GUI using Python’s Tkinter and ttk for a modern look.  
+ – Contains the main note list view and the detailed note form for creating/editing notes.  
+ – Handles window layout, responsiveness, and user feedback.
 
-B. Business Logic Layer:
-   • Technology: Python (core application logic)
-   • Responsibilities:
-     - Validate and process user input from the UI.
-     - Manage note lifecycle, including:
-       • Creation: Validate data and generate creation timestamp.
-       • Editing: Update note content and “Last Modified Timestamp.”
-       • Deletion: Confirm the deletion action and update the UI afterward.
-     - Acting as a controller that bridges UI events with data operations.
-   • Design Considerations:
-     - Modular functions/classes for each operation (CRUD).
-     - Separation of concerns – UI components do not embed database logic.
-     - Easy unit-testability of business rules.
-     
-C. Data Access and Persistence Layer:
-   • Technology: SQLite for local storage
-   • Implementation Options:
-     - Use a lightweight ORM (like SQLAlchemy in “light mode”) or custom helper functions.
-   • Responsibilities:
-     - Database Initialization:
-       • Check for the database file upon application start.
-       • Create “notes” table using a defined schema if missing.
-     - CRUD Operations:
-       • Create, read, update, and delete note entries.
-       • Handle schema migration/versioning for future enhancements.
-   • Important Details:
-     - Ensure sanitization and secure handling of data.
-     - Optional enhancement: Develop mechanisms for auto-save support in the future.
-     
-D. Infrastructure and Deployment:
-   • Environment management:
-     - Use Python 3.8+ with a dedicated virtual environment (venv or conda).
-     - Manage dependencies via requirements.txt.
-   • Deployment Tools:
-     - Build scripts and packaging utilities (e.g., PyInstaller or cx_Freeze) to create standalone executables for Windows, macOS, and Linux.
-     - Database initialization scripts to support both development and production environments.
-   • Testing:
-     - Automated unit tests covering UI (where possible, using simulation frameworks), business logic (data validation, timestamp management), and database interactions.
-     - Cross-platform testing to ensure consistent behavior.
+• Controller (Business Logic)  
+ – Acts as the intermediary between the View and Model.  
+ – Validates user input, performs CRUD operations and triggers view updates immediately.  
+ – Ensures that all operations follow business rules (e.g., preventing empty note submissions).
 
-────────────────────────────────────────
-3. Technology Stack Selection
-────────────────────────────────────────
-• Programming Language: Python 3.8 or later.
-• GUI Framework: Tkinter.
-   - Chosen for simplicity and built-in cross-platform support.
-   - Future possibility of migrating to frameworks like PyQt or wxPython if advanced UI features are needed.
-• Database: SQLite.
-   - Lightweight, file-based, and sufficient for storing plain-text notes.
-• ORM/Database Access:
-   - SQLAlchemy (optional) or a custom-written data access module using Python’s sqlite3 package.
-• Package Management:
-   - Pip alongside a requirements.txt file.
-• Virtual Environment:
-   - Use venv (or Conda) for dependency isolation.
-• Deployment:
-   - Tools like PyInstaller or cx_Freeze to bundle the application into standalone executables for distribution.
-• Testing Frameworks:
-   - Unittest or PyTest for unit tests and integration tests.
-• Version Control:
-   - Git, with a clear branching strategy documented.
+─────────────────────────────  
+2. COMPONENT DESIGN & MODULE DECOMPOSITION
 
-────────────────────────────────────────
-4. Summary and Future Enhancements
-────────────────────────────────────────
-• The layered architecture supports clear separation between UI, business logic, and data persistence.
-• The modular design enables:
-   - Ease of maintenance and extensibility.
-   - Clear testing boundaries.
-   - Future feature additions such as enhanced rich-text support, synchronization with cloud storage, and more advanced UI components.
-• Developers can start with a simple, locally stored application and then scale up by reusing and extending the existing architecture.
+A. UI Module  
+ • Purpose: Render the user interface and capture user interactions.  
+ • Components:  
+  – MainWindow: Displays a list of notes with concise details (title, snippet, timestamp).  
+  – NoteForm: Provides a form for note creation and editing, with clearly labeled fields and dialogs for confirmation (e.g., delete confirmation).  
+  – Notifications/Status Bar: Displays success/error messages, using Tkinter’s messagebox or custom pop-ups.
 
-This high-level system architecture ensures that the note-taking application is maintainable, secure, and extendable. The clear separation of concerns not only simplifies the initial development but also lays the groundwork for future enhancements and potential migration to more sophisticated frameworks.
+B. Business Logic Module  
+ • Purpose: Validate and process data from UI and manage application-specific operations.  
+ • Component: NoteManager  
+  – Functions include: create_note, update_note, delete_note, and fetch_notes.  
+  – Contains input validation routines and logic to update the UI in response to data changes.
+
+C. Persistence Module  
+ • Purpose: Abstract data storage details for saving, retrieving, and updating note data.  
+ • Options for storage:  
+  – Primary: SQLite database (using Python’s sqlite3 module) for structured data and scalability.  
+  – Alternative: File-based storage (e.g., JSON) for a simpler initial version.  
+ • Files: storage_manager.py (or sqlite_manager.py) which exposes functions like save_note, load_notes, update_note, delete_note.  
+ • Note: By abstracting persistence into its own module, the storage backend can be swapped with minimal changes to business logic.
+
+D. Utilities Module  
+ • Purpose: Provide helper services used across the application.  
+ • Functions include:  
+  – Timestamp generation and formatting  
+  – Configuration file parsing (e.g., reading settings.json)  
+  – General error handling and logging  
+ • File: utils.py
+
+─────────────────────────────  
+3. TECHNOLOGY STACK & DEPENDENCY MANAGEMENT
+
+• Programming Language: Python 3.9 or later  
+ – Ensures compatibility and access to the latest language features.
+
+• GUI Framework: Tkinter with ttk  
+ – Tkinter is bundled with Python and is sufficient for building simple desktop applications.  
+ – ttk enhances widget styling for a more consistent look across platforms.
+
+• Data Persistence:  
+ – Primary choice: SQLite using the built-in sqlite3 module, offering a lightweight relational database.  
+ – Alternative option: JSON file-based storage for initial prototyping or extreme simplicity.
+
+• Virtual Environment:  
+ – Use venv or virtualenv to isolate project dependencies.  
+ – Maintain a requirements.txt (or Pipfile) documenting all third-party dependencies (if needed).
+
+• Testing Frameworks:  
+ – Unit testing using unittest or pytest for the business logic and persistence modules.  
+ – Consider GUI testing tools (e.g., TkinTest or manual tests) to simulate user interactions.
+
+• Deployment Scripts & Documentation:  
+ – A simple launch script (run_app.py) to start the application.  
+ – README.md containing setup instructions, usage guidelines, and troubleshooting information.
+
+─────────────────────────────  
+4. DATA MODEL & FLOW
+
+Data Model – Note Entity:
+
+ Attributes:  
+  - id: Unique identifier (could be auto-incremented integer or UUID)  
+  - title: Mandatory string field  
+  - content: Mandatory text field  
+  - timestamp: Auto-generated at create/update  
+  - tags: Optional list (may be stored as a JSON string or in a separate table if using SQLite)
+
+Data Flow:
+
+1. User initiates a CRUD operation from the UI (e.g., clicking “Save” on NoteForm).  
+2. Controller (NoteManager) validates input and calls the appropriate persistence function (e.g., save_note).  
+3. Persistence Module writes to the storage (SQLite DB or JSON file) and returns a success/error response.  
+4. Controller updates the View, such as refreshing the note list and displaying proper notifications.  
+5. The Utilities Module assists by providing timestamp generation, configuration values, and any formatting needs.
+
+─────────────────────────────  
+5. FUTURE EXTENSIBILITY & MAINTENANCE
+
+• Modularity:  
+ – Clear module boundaries make it easier to add features like multi-user support or cloud synchronization.  
+ – A well-documented interface between modules ensures future components (e.g., switching from Tkinter to PyQt) will require minimal rework.
+
+• Scalability:  
+ – With SQLite as the initial persistence layer, structured storage enables more complex queries (e.g., sorting or filtering by tags).  
+ – Abstraction of persistence also makes it feasible to migrate to a more robust database if needed later.
+
+• Testing & Debugging:  
+ – Unit tests on the business logic and persistence modules ensure that as features grow, reliability is maintained.  
+ – Manual and automated UI tests help validate the responsiveness of the Tkinter interface.
+
+─────────────────────────────  
+6. SUMMARY
+
+This high-level design leverages a modular architecture based on the MVC pattern, ensuring separation between the UI, business logic, and data management. The selected technology stack—Python 3.9+ with Tkinter/ttk for the GUI and SQLite (or JSON) for data persistence—is well aligned with the functional and non-functional requirements. The design provides a robust foundation for a responsive, easy-to-use note-taking application with clear considerations for future enhancements.
+
+This architecture can now be used to guide detailed design documents, code organization, and subsequent implementation efforts.

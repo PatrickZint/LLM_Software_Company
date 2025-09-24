@@ -3,7 +3,6 @@ Features:
 Basic UI with a list of notes:
 - Add new notes using a simple form
 - Edit and delete existing notes
-- Store notes locally in a SQLite database
 Data Storage:
 - Store notes locally in a SQLite database
 - Each note has a title, content, and timestamp

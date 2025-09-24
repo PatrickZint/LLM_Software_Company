@@ -1,0 +1,2 @@
+# Python version 3.9+
+# Tkinter is included with standard Python distributions.

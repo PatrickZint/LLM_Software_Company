@@ -1,0 +1,182 @@
+Below is a high-level system architecture that maps the specification’s functional and non‑functional requirements into a modular design. This design separates the concerns of user interaction, business logic, persistence, security, and data import/export, and also maps out a technology stack that meets the deliverables.
+
+──────────────────────────────
+1. OVERALL ARCHITECTURE LAYERS
+
+A. Presentation Layer (User Interface)
+ • Role:  
+  – Provides the graphical interface using Tkinter and ttk for styling.  
+  – Contains windows, dialogs, toolbars, menus, and custom text editor widgets.
+ • Components:  
+  – Main Window: Displays note listing, categories/tags sidebar, and status messages.  
+  – Login/Registration Dialogs: For secure user authentication.  
+  – Note Editor: A composite widget (Tkinter Text widget enhanced with tagging/formatting) for rich text editing.  
+  – Import/Export Dialogs: Interfaces for file selection and JSON validation.
+ • Technology Stack:  
+  – Python 3.8+ with Tkinter/ttk  
+  – Custom composite widgets when needed (e.g., Notebook widget for switching modes)
+
+B. Business Logic Layer (Controller)
+ • Role:  
+  – Acts as the mediator between the UI and persistence/security layers.  
+  – Implements CRUD operations, note processing, formatting toggles, and user session management.
+ • Components:  
+  – Note Manager: Handles creation, update, deletion, retrieval of note objects while coordinating encryption/decryption.  
+  – User Manager: Handles registration, login, password validation, and session control.  
+  – Search Controller: Manages filtering/search operations through SQLite FTS or indexed queries.  
+  – Configuration Manager: Loads settings from config.json/YAML (e.g., database path, encryption parameters, UI preferences).  
+ • Technology Stack:  
+  – Python classes and modules with clear APIs enabling unit testing  
+  – MVC or MVP pattern to enable separation of concerns
+
+C. Data Access Layer (Persistence)
+ • Role:  
+  – Handles all communication with the SQLite database ensuring data consistency and transaction safety.  
+  – Maps business objects (notes, user accounts) to persistent schema.
+ • Components:
+  – Database Manager:  
+   ○ Manages connection to the SQLite database.  
+   ○ Implements CRUD operations and uses transactions where needed.
+  – Schema Repository:  
+   ○ Implements database migration and indexing (i.e., indexes on User IDs, Note IDs, and full-text indexes for search).
+  – Data Mapper/ORM-like layer:  
+   ○ Although using raw SQL is acceptable for SQLite, an optional lightweight mapper can simplify CRUD operations.
+ • Technology Stack:  
+  – SQLite  
+  – Python’s sqlite3 module (possibly SQLAlchemy in “core” mode if abstraction is desired, though not explicitly required)
+
+D. Security and Encryption Module
+ • Role:  
+  – Provides protection for user logins and note contents using robust encryption and hashing schemes.
+ • Components:
+  – Encryption Engine:  
+   ○ Encrypts note content (using AES or Fernet) before storage and decrypts on-the-fly during retrieval.  
+   ○ Uses parameters from the config (e.g., key derivation using PBKDF2).
+  – Password Hasher:  
+   ○ Implements secure hashing (using bcrypt or Argon2) to protect user credentials.
+  – Key Manager:  
+   ○ Handles deriving and caching temporary keys based on user password upon login.  
+   ○ Reads and validates encryption configuration from the settings file.
+ • Technology Stack:  
+  – cryptography library for encryption routines  
+  – bcrypt or argon2 libraries for secure password hashing
+
+E. Import/Export Module
+ • Role:  
+  – Enables JSON file import and export operations for notes, ensuring proper data validation and duplicate handling.
+ • Components:
+  – JSON Parser/Validator:  
+   ○ Parses user-provided JSON data and validates against expected note data structure.  
+   ○ Provides error feedback to the UI if mismatches are detected.
+  – Exporter:  
+   ○ Transforms internal note objects into JSON, preserving metadata such as categories, tags, and timestamps.
+ • Technology Stack:  
+  – Python’s built-in json module  
+  – Custom error handling routines and validation logic
+
+──────────────────────────────
+2. DATA FLOW OVERVIEW
+
+A. Application Startup (Initialization)
+ 1. Load configuration (from config.json/YAML) using the Configuration Manager.
+ 2. Initialize logging based on configuration settings.
+ 3. Set up database connection via the Database Manager.
+ 4. Present the Login/Registration dialog via the Presentation Layer.
+
+B. User Login and Session Start
+ 1. The User Manager authenticates using the secure Password Hasher.
+ 2. On successful login, the Encryption Engine derives a temporary decryption key from the user’s password.
+ 3. The UI is updated to show the user’s dashboard and note list.
+
+C. CRUD Operations on Notes
+ 1. Create/Update:  
+  – The Note Editor captures note input (title, content, metadata).  
+  – Before storing, note content is sent to the Encryption Engine for encryption.  
+  – The Business Logic Layer forwards the encrypted note to the Database Manager.
+ 2. Read:  
+  – Notes are retrieved from SQLite, decrypted on‑the‑fly, and rendered in the Note Editor.
+ 3. Delete:  
+  – A confirmation prompt is triggered by the UI, and on confirmation, the Business Logic instructs the Database Manager to remove the record.
+ 4. Search:  
+  – The Search Controller issues queries (leveraging SQLite FTS or indexed searches) to filter notes.
+  – Results are displayed in the UI list.
+
+D. Import/Export Operations
+ 1. Export:  
+  – The Exporter module gathers a set of notes, serializes them into a well‑structured JSON object, and offers a file save dialogue.
+ 2. Import:  
+  – The JSON Parser reads the file and validates its structure before merging or updating local data via the Business Logic Layer.
+
+──────────────────────────────
+3. TECHNOLOGY STACK SELECTION & PACKAGING
+
+• Primary Programming Language:  
+ – Python 3.8+
+
+• GUI Development:  
+ – Tkinter with ttk for theming and modern widget styling
+
+• Database:
+ – SQLite (using Python’s sqlite3 module; consider SQLite FTS for improved search performance)
+
+• Security Libraries:  
+ – cryptography (for AES/Fernet encryption and PBKDF2 key derivation)  
+ – bcrypt or Argon2 for secure password hashing
+
+• Additional Utilities:
+ – Pillow for any image-related functionality (if required)
+ – Python’s built-in json module for JSON import/export
+
+• Dependency Management:
+ – requirements.txt listing all third‑party libraries  
+ – Virtual environments (venv or virtualenv) for dependency isolation
+
+• Packaging & Deployment:
+ – PyInstaller (or similar) to bundle the application into standalone executables
+
+──────────────────────────────
+4. COMPONENT DESIGN & MODULE INTERACTION
+
+[A] UI Module  
+ – Handles user interactions and forwards actions (e.g., “create note”, “save note”, “search”) to the Controller.  
+ – Implements responsive layouts via Tkinter’s grid/pack managers.  
+ – Renders notifications and error messages.
+
+[B] Controller / Business Logic Module  
+ – Receives events from the UI, validates inputs, and coordinates with the persistence and security modules.  
+ – Keeps the UI decoupled from the details of storage/encryption.
+
+[C] Persistence Module  
+ – Implements a wrapper around SQLite database calls, including connection management and transaction safety.  
+ – Uses an abstraction layer that makes it easier to extend in the future (e.g., for cloud synchronization).
+
+[D] Security Module  
+ – Encrypts note content before the data is sent to the persistence layer.  
+ – Decrypts note content when a note is retrieved.  
+ – Handles login and password hashing routines to secure user sessions.
+
+[E] JSON Import/Export Module  
+ – Provides APIs to serialize/deserialize note objects.  
+ – Interacts with the Controller for merging or exporting note data while handling errors (e.g., duplicate notes).
+
+──────────────────────────────
+5. MAINTAINABILITY & FUTURE EXTENSIBILITY
+
+• Adopt a clear modular structure (e.g., using MVC/MVP) to separate UI, logic, and persistence.
+• Place configuration in external files (config.json/YAML) allowing runtime changes without code modifications.
+• Document internal APIs and component interfaces to ease unit testing and integration testing.
+• Design the Data Access Layer to allow eventual migration to a cloud-based storage solution.
+• Keep security concerns (key management, encryption) modular to upgrade as best practices evolve.
+
+──────────────────────────────
+6. SUMMARY
+
+The proposed high-level architecture includes:
+
+ 1. A Presentation Layer built with Python’s Tkinter and ttk for a modern, responsive user interface.
+ 2. A Business Logic (Controller) Layer that handles core application workflows including note CRUD operations, search functionalities, and multi-user authentication.
+ 3. A Data Access Layer centered on SQLite for efficient, indexed data persistence with transaction safety and future extensibility.
+ 4. A Security Module that employs cryptography (AES/Fernet, PBKDF2) and robust password hashing (bcrypt/argon2) to secure sensitive data.
+ 5. An Import/Export Module dedicated to managing JSON file exchanges.
+
+This layered design, paired with the selected Python-based technology stack, meets both the functional and non‑functional requirements while providing a clear path to maintenance and future feature enhancements.
