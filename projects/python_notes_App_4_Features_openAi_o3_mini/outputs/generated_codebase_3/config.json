@@ -1,0 +1,10 @@
+{
+    "DatabaseFilePath": "data/notes.db",
+    "Theme": "light",
+    "DefaultExportPath": "exports",
+    "Editor": {
+        "font_size": 12,
+        "font_family": "Arial",
+        "syntax_highlighting": true
+    }
+}

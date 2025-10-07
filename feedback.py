@@ -38,7 +38,7 @@ def main():
     specifications_path = os.path.join(outputs_dir, 'refined_environment.txt')
 
     # Feedback-Agent: Feedback.txt wird automatisch berücksichtigt
-    codebase = code_gen_agent.generate_codebase(architecture_path, specifications_path, outputs_dir, inputs_dir, use_existing_codebase=True)
+    codebase = code_gen_agent.generate_codebase(architecture_path, specifications_path, outputs_dir, inputs_dir, use_existing_codebase=False)
     save_output(os.path.join(outputs_dir, 'generated_codebase_with_feedback.txt'), codebase)
 
 if __name__ == "__main__":

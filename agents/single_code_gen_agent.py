@@ -3,40 +3,28 @@ import os
 import zipfile
 
 
-class FeedbackCodeGenerationAgent:
+class CodeGenerationAgent:
     def __init__(self, llm_reasoner, github_manager):
         self.llm = llm_reasoner
         self.github = github_manager
 
-    def generate_codebase(self, architecture_file, specifications_file, outputs_dir, inputs_dir, use_existing_codebase):
+    def generate_codebase(self, goals_path, environment_path, outputs_dir, inputs_dir):
         # Read file locally
-        with open(architecture_file, 'r', encoding='utf-8') as f:
-            architecture = f.read()
-        with open(specifications_file, 'r', encoding='utf-8') as f:
-            specifications = f.read()
+        with open(goals_path, 'r', encoding='utf-8') as f:
+            goals = f.read()
+        with open(environment_path, 'r', encoding='utf-8') as f:
+            environment = f.read()
 
-        # Read feedback
-        feedback_path = os.path.join(inputs_dir, 'Feedback.txt')
-        feedback = None
-        if os.path.exists(feedback_path):
-            with open(feedback_path, 'r', encoding='utf-8') as f:
-                feedback = f.read()
-        else:
-            feedback = ""
-
-        # Read Codebase
-        existing_codebase = None
-        if use_existing_codebase:
-            codebase_path = os.path.join(outputs_dir, 'generated_codebase.txt')
-            if os.path.exists(codebase_path):
-                with open(codebase_path, 'r', encoding='utf-8') as f:
-                    existing_codebase = f.read()
+        """
+        # Read system architecture and specifications from GitHub
+        architecture = self.github.read_file(architecture_file)
+        specifications = self.github.read_file(specifications_file)
+        """
 
         # Generate codebase
         prompt = (
-            f"You are a software engineer. Based on the following system architecture, specifications, feedback "
-            f"and existing codebase, regenerate all required Python-Files or modify them to implement the feedback. "
-            f"Respond in JSON format with this structure:.\n\n"
+            f"You are a software engineer. Based on the following system goals and environment, "
+            f"generate all required Python-Files. Respond in JSON format with this structure:.\n\n"
             f"{{\n"
             f"  \"files\": [\n"
             f"    {{\n"
@@ -46,25 +34,27 @@ class FeedbackCodeGenerationAgent:
             f"    ...\n"
             f"  ]\n"
             f"}}\n\n"
-            f"System Architecture:\n{architecture}\n\n"
-            f"System Specifications:\n{specifications}"
+            f"System Goals:\n{goals}\n\n"
+            f"System Environment:\n{environment}"
         )
-        if feedback:
-            prompt += f"\nFeedback from previous run:\n{feedback}\n"
-        if existing_codebase:
-            prompt += f"\nCurrent Codebase:\n{existing_codebase}\n"
 
         codebase = self.llm.get_chat_response(prompt)
+        """
+        codebase = self.llm.get_chat_response(
+            prompt#,
+            #response_format={ "type": "json_object" }
+        ) # Get the response in JSON format
+        """
 
         print(codebase)
 
         # Save codebase
-        txt_path = os.path.join(outputs_dir, 'generated_codebase_with_feedback.txt')
+        txt_path = os.path.join(outputs_dir, 'generated_codebase.txt')
 
         with open(txt_path, 'w', encoding='utf-8') as f:
             f.write(codebase)
 
-        file_path = os.path.join(outputs_dir, 'generated_codebase_with_feedback.zip')
+        file_path = os.path.join(outputs_dir, 'generated_codebase.zip')
 
         codebase = save_codebase_as_zip(txt_path, file_path, inputs_dir)
 
