@@ -1,0 +1,13 @@
+Create a simple note-taking app allowing users to create, view, and delete personal notes.
+Features:
+Basic UI with a list of notes:
+- Add new notes using a simple form
+- Edit and delete existing notes
+Data Storage:
+- Store notes locally in a SQLite database
+- Each note has a title, content, and timestamp
+Add support for note categories and tags:
+- Implement a search function for notes
+- Store note metadata (timestamps, tags, categories)
+- Export and import notes as JSON files
+The result should be a functional application with a UI, so if necessary, create required config files.

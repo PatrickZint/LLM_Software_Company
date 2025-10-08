@@ -14,7 +14,7 @@ def save_output(filepath, content):
             f.write(str(content))
 
 def main():
-    project_name = 'python_notes_App_1_Features_openAi_o3_mini'
+    project_name = 'python_notes_App_5_Features_openAi_o3_mini'
     base_dir = os.path.join('projects', project_name)
     inputs_dir = os.path.join(base_dir, 'inputs')
     outputs_dir = os.path.join(base_dir, 'outputs_single')

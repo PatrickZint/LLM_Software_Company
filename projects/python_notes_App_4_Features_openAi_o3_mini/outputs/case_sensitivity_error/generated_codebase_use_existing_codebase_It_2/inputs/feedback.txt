@@ -1,0 +1,2 @@
+The UI is Buggy (when you edit a note and then use one of the Buttons: Bold, Italic, Underline, Code, Toggle to Markdown, you are not able to save the edited note).
+Additionally the search function and the tags and categories for notes are missing.

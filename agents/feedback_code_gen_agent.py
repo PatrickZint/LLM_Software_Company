@@ -16,7 +16,7 @@ class FeedbackCodeGenerationAgent:
             specifications = f.read()
 
         # Read feedback
-        feedback_path = os.path.join(inputs_dir, 'Feedback.txt')
+        feedback_path = os.path.join(inputs_dir, 'feedback.txt')
         feedback = None
         if os.path.exists(feedback_path):
             with open(feedback_path, 'r', encoding='utf-8') as f:
@@ -27,9 +27,14 @@ class FeedbackCodeGenerationAgent:
         # Read Codebase
         existing_codebase = None
         if use_existing_codebase:
-            codebase_path = os.path.join(outputs_dir, 'generated_codebase.txt')
-            if os.path.exists(codebase_path):
-                with open(codebase_path, 'r', encoding='utf-8') as f:
+            preferred_path = os.path.join(outputs_dir, 'generated_codebase_with_feedback.txt')
+            fallback_path = os.path.join(outputs_dir, 'generated_codebase.txt')
+
+            if os.path.exists(preferred_path):
+                with open(preferred_path, 'r', encoding='utf-8') as f:
+                    existing_codebase = f.read()
+            elif os.path.exists(fallback_path):
+                with open(fallback_path, 'r', encoding='utf-8') as f:
                     existing_codebase = f.read()
 
         # Generate codebase
@@ -106,7 +111,7 @@ def save_codebase_as_zip(codebase_json_path, zip_path, inputs_dir):
             zipf.writestr(filename, content)
 
         # Füge extra input-Dateien hinzu, falls vorhanden
-        for extra_file in ["goals.txt", "environment.txt"]:
+        for extra_file in ["goals.txt", "environment.txt", "feedback.txt"]:
             file_path = os.path.join(inputs_dir, extra_file)
             if os.path.exists(file_path):
                 with open(file_path, 'r', encoding='utf-8') as ef:

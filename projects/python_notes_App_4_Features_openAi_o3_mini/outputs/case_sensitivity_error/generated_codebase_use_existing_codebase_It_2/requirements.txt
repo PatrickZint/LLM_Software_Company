@@ -1,0 +1,2 @@
+tkinter
+# sqlite3, json, datetime are part of the Python standard library
