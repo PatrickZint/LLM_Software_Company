@@ -1,0 +1,1 @@
+As of now there is no way of seeing the Markdown result.

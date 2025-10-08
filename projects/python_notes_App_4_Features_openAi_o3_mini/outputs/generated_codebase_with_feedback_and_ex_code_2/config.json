@@ -1,0 +1,14 @@
+{
+   "DatabaseFilePath": "notes.db",
+   "Theme": "light",
+   "DefaultExportPath": "exports/",
+   "SupportedFormats": {
+       "RichText": true,
+       "Markdown": true
+   },
+   "EditorSettings": {
+       "FontSize": 14,
+       "FontFamily": "Sans-Serif",
+       "SyntaxHighlighting": true
+   }
+}
